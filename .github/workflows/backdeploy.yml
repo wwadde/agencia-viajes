@@ -14,7 +14,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-back
+  IMAGE_NAME: wwadde/agencia-viajes-back
 
 jobs:
   build-and-push:
