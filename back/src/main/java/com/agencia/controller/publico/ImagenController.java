@@ -48,6 +48,9 @@ public class ImagenController {
     @Value("${storage.public-base-url}")
     private String publicBaseUrl;
 
+    @Value("${storage.thumbnail-suffix:_thumb}")
+    private String thumbnailSuffix;
+
 
     /**
      * Sube una imagen al servidor.
@@ -75,7 +78,10 @@ public class ImagenController {
 
         String referencia = storageService.guardar(file, carpeta);
         String url = buildPublicUrl(referencia);
-        return ResponseEntity.status(201).body(new ImagenSubidaResponse(referencia, url));
+        String thumbnailReferencia = toThumbnailReference(referencia);
+        String thumbnailUrl = buildPublicUrl(thumbnailReferencia);
+        return ResponseEntity.status(201)
+                .body(new ImagenSubidaResponse(referencia, url, thumbnailReferencia, thumbnailUrl));
     }
 
     @GetMapping
@@ -159,13 +165,28 @@ public class ImagenController {
     }
 
     private ImagenBibliotecaItemDTO toBibliotecaItem(StorageFileInfo info) {
+        String thumbnailReferencia = toThumbnailReference(info.referencia());
         return new ImagenBibliotecaItemDTO(
                 info.referencia(),
                 buildPublicUrl(info.referencia()),
+                thumbnailReferencia,
+                buildPublicUrl(thumbnailReferencia),
                 info.carpeta(),
                 info.nombre(),
                 info.tamanoBytes(),
                 info.fechaModificacion()
         );
+    }
+
+    private String toThumbnailReference(String referencia) {
+        String safeSuffix = (thumbnailSuffix == null || thumbnailSuffix.isBlank()) ? "_thumb" : thumbnailSuffix;
+        int slashIndex = referencia.lastIndexOf('/');
+        int dotIndex = referencia.lastIndexOf('.');
+        if (slashIndex < 0 || dotIndex <= slashIndex) {
+            return referencia;
+        }
+        String prefix = referencia.substring(0, dotIndex);
+        String extension = referencia.substring(dotIndex);
+        return prefix + safeSuffix + extension;
     }
 }
