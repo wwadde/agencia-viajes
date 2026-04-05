@@ -1,4 +1,4 @@
-name: Build & Push Frontend Docker Image
+name: Build & Push Frontend Image
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-front
+  IMAGE_NAME: wwadde/agencia-viajes-front
 
 jobs:
   build-and-push:
@@ -45,7 +45,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,prefix=sha-
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
