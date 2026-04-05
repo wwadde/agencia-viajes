@@ -1,0 +1,91 @@
+# ==============================
+# Monorepo ignore rules
+# back (Spring Boot/Gradle) + front (Angular)
+# ==============================
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# ==============================
+# IDE / editor
+# ==============================
+
+# IntelliJ / JetBrains
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/*
+
+# ==============================
+# Backend: Spring Boot / Gradle
+# ==============================
+
+back/.gradle/
+back/build/
+back/bin/
+back/out/
+
+# Keep wrapper jar committed
+!back/gradle/wrapper/gradle-wrapper.jar
+
+# If nested source modules generate build/bin/out, keep source-owned outputs optional
+!back/**/src/main/**/build/
+!back/**/src/test/**/build/
+!back/**/src/main/**/bin/
+!back/**/src/test/**/bin/
+!back/**/src/main/**/out/
+!back/**/src/test/**/out/
+
+# NetBeans
+back/nbproject/private/
+back/nbbuild/
+back/dist/
+back/nbdist/
+back/.nb-gradle/
+
+# ==============================
+# Frontend: Angular / Node
+# ==============================
+
+front/node_modules/
+front/dist/
+front/tmp/
+front/out-tsc/
+front/bazel-out/
+front/.angular/cache/
+front/.sass-cache/
+front/coverage/
+front/typings/
+front/__screenshots__/
+
+# Logs / lock artifacts
+front/npm-debug.log
+front/yarn-error.log
+front/testem.log
+front/connect.lock
+front/libpeerconnection.log
