@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Evita indexar rutas privadas o de flujo interno
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /reservas/checkout

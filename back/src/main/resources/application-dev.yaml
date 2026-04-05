@@ -1,0 +1,26 @@
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    # Permite que Swagger UI envíe cookies de sesión (JSESSIONID) en peticiones cross-origin
+    with-credentials: true
+    csrf:
+#      cookie-name: XSRF-TOKEN
+#      header-name: X-XSRF-TOKEN
+      enabled: true
+  api-docs:
+    path: /api-docs
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    com.zaxxer.hikari: DEBUG
+
+app:
+  frontend:
+    url: http://localhost:4200
+  cors:
+    allowed-origins: http://localhost:4200
+
+# ─── Almacenamiento (dev) ─────────────────────────────────────────────────────
+storage:
+  location: ${java.io.tmpdir}/agencia-images
+  public-base-url: http://localhost:8080/images

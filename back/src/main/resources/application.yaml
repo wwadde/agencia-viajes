@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: agencia
+
+  profiles:
+    active: dev
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+#    show-sql: true
+    properties:
+      hibernate:
+#        format_sql: true
+    open-in-view: false
+
+  config:
+    import: optional:file:.env[.properties]
+
+  jackson:
+    time-zone: America/Bogota
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+  servlet:
+    multipart:
+      max-file-size: 4MB
+      max-request-size: 4MB
+      enabled: true
+
+
+
+server:
+  servlet:
+    session:
+      # Tiempo de inactividad antes de expirar la sesión
+      timeout: 3600s
+      cookie:
+        http-only: true
+        secure: false
+        same-site: lax
+  tomcat:
+    max-swallow-size: 5MB
+
+storage:
+  # Ruta del volumen Docker compartido con Nginx
+  location: ${STORAGE_LOCATION:/app/images}
+  # 5 MB por defecto
+  max-file-size-bytes: 4000000
+  allowed-directories: ${STORAGE_ALLOWED_DIRECTORIES:paquetes,iconos,landing}
+  public-base-url: ${STORAGE_PUBLIC_BASE_URL:http://localhost/images}
+
+payments:
+  enabled: ${PAYMENTS_ENABLED:false}
+  provider: ${PAYMENTS_PROVIDER:SIN_CONFIGURAR}
+  webhook-secret: ${PAYMENTS_WEBHOOK_SECRET:}
+  callback-success-url: ${PAYMENTS_CALLBACK_SUCCESS_URL:http://localhost:4200/pago/exito}
+  callback-failure-url: ${PAYMENTS_CALLBACK_FAILURE_URL:http://localhost:4200/pago/error}
+  currency-default: ${PAYMENTS_CURRENCY_DEFAULT:COP}
+  payu:
+    sandbox-enabled: ${PAYMENTS_PAYU_SANDBOX_ENABLED:true}
+    checkout-base-url: ${PAYMENTS_PAYU_CHECKOUT_BASE_URL:https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/}
+    api-login: ${PAYMENTS_PAYU_API_LOGIN:pRRXKOl8ikMmt9u}
+    api-key: ${PAYMENTS_PAYU_API_KEY:4Vj8eK4rloUd272L48hsrarnUA}
+    merchant-id: ${PAYMENTS_PAYU_MERCHANT_ID:508029}
+    account-id: ${PAYMENTS_PAYU_ACCOUNT_ID:512321}
+    public-key: ${PAYMENTS_PAYU_PUBLIC_KEY:PKaC6H4cEDJD919n705L544kSU}
+    response-url: ${PAYMENTS_PAYU_RESPONSE_URL:http://localhost:4200/mis-reservas/resultado-pago}
+    confirmation-url: ${PAYMENTS_PAYU_CONFIRMATION_URL:http://localhost:8080/api/pagos/webhook/payu}
+    sandbox-min-usd-amount: ${PAYMENTS_PAYU_SANDBOX_MIN_USD_AMOUNT:1.00}
+    sandbox-min-amount-by-currency:
+      USD: ${PAYMENTS_PAYU_SANDBOX_MIN_AMOUNT_USD:1.00}
+      COP: ${PAYMENTS_PAYU_SANDBOX_MIN_AMOUNT_COP:4000.00}
+
+app:
+  auth:
+    google:
+      success-path: ${GOOGLE_LOGIN_SUCCESS_PATH:/auth/google/callback}
+      failure-path: ${GOOGLE_LOGIN_FAILURE_PATH:/auth/google/callback}
+

@@ -1,0 +1,91 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import "tailwindcss";
+
+:root {
+	--color-sea: #dae2df;
+	--color-sea-strong: #c8d3cf;
+	--color-rose: #e2dadd;
+	--color-cloud: #f4f5f4;
+	--color-ink: #283539;
+	--color-night: #1f2a2d;
+	--color-muted: #526468;
+	--color-muted-soft: #6f8084;
+}
+
+html,
+body {
+	background: linear-gradient(160deg, #dae2df 0%, #edf2f0 45%, #e2dadd 100%);
+	min-height: 100%;
+}
+
+.theme-landing {
+	background:
+		radial-gradient(circle at 8% 5%, rgb(255 255 255 / 62%) 0%, transparent 40%),
+		radial-gradient(circle at 90% 16%, rgb(226 218 221 / 48%) 0%, transparent 46%),
+		linear-gradient(170deg, #dae2df 0%, #eef3f1 54%, #e2dadd 100%);
+}
+
+.theme-shell {
+	background:
+		radial-gradient(circle at 10% 12%, rgb(255 255 255 / 52%) 0%, transparent 40%),
+		radial-gradient(circle at 88% 8%, rgb(226 218 221 / 44%) 0%, transparent 36%),
+		linear-gradient(165deg, #dae2df 0%, #eef2f0 48%, #e2dadd 100%);
+}
+
+
+.hero-glow::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(circle at 70% 82%, rgb(218 226 223 / 33%), transparent 45%);
+	pointer-events: none;
+}
+
+.animate-fade-up {
+	animation: fade-up 0.75s ease-out both;
+}
+
+.animate-fade-up-delay {
+	animation: fade-up 0.75s ease-out 0.12s both;
+}
+
+.animate-fade-up-delay-2 {
+	animation: fade-up 0.75s ease-out 0.24s both;
+}
+
+.animate-float-soft {
+	animation: float-soft 4.8s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		transform: translate3d(0, 20px, 0);
+	}
+
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes float-soft {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-8px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-fade-up,
+	.animate-fade-up-delay,
+	.animate-fade-up-delay-2,
+	.animate-float-soft {
+		animation: none !important;
+	}
+}

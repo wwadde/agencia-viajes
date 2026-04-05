@@ -1,0 +1,21 @@
+<section class="not-found-shell" aria-labelledby="not-found-title">
+  <div class="not-found-card">
+    <p class="not-found-code" aria-hidden="true">404</p>
+    <h1 id="not-found-title">La página que intentas acceder no existe</h1>
+
+    <p class="not-found-copy">
+      No encontramos la ruta solicitada:
+      <span class="not-found-url">{{ requestedUrl() }}</span>
+    </p>
+
+    <div class="not-found-actions">
+      <button type="button" class="not-found-back-button" (click)="goBack()">
+        Volver atrás
+      </button>
+
+      <a routerLink="/" class="not-found-home-link">
+        Volver al inicio
+      </a>
+    </div>
+  </div>
+</section>
