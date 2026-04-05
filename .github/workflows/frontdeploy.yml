@@ -1,17 +1,24 @@
-name: Build & Push Docker Image
+name: Build & Push Frontend Docker Image
 
 on:
   push:
-    branches: [master]
+    branches: [ main ]
+    paths:
+      - 'front/**'
+      - '.github/workflows/frontdeploy.yml'
   workflow_dispatch:
+
+concurrency:
+  group: docker-build-front
+  cancel-in-progress: true
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-front
 
 jobs:
   build-and-push:
-    name: Build & Push to GHCR
+    name: Build & Push Frontend to GHCR
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -43,7 +50,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./front
+          file: ./front/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
