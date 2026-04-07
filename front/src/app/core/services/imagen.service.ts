@@ -8,6 +8,9 @@ import type { ProblemDetail } from '../models/error.model';
 @Injectable({ providedIn: 'root' })
 export class ImagenService {
     private readonly baseUrl = `${environment.apiUrl}/admin/imagenes`;
+    private readonly thumbnailDirectory = 'miniaturas';
+    private readonly smallThumbnailWidth = 480;
+    private readonly mediumThumbnailWidth = 960;
     private http = inject(HttpClient);
 
     // Private writable signals
@@ -57,6 +60,74 @@ export class ImagenService {
 
         const base = environment.imageBaseUrl.replace(/\/$/, '');
         return `${base}/${normalized}`;
+    }
+
+    buildThumbnailUrl(referencia: string, width: number): string {
+        if (!referencia) return '';
+        const thumbnailReference = this.toThumbnailReference(referencia, width);
+        return this.buildUrl(thumbnailReference);
+    }
+
+    buildMobileSrcset(referencia: string): string {
+        if (!referencia) return '';
+
+        const small = this.buildThumbnailUrl(referencia, this.smallThumbnailWidth);
+        const medium = this.buildThumbnailUrl(referencia, this.mediumThumbnailWidth);
+
+        return `${small} ${this.smallThumbnailWidth}w, ${medium} ${this.mediumThumbnailWidth}w`;
+    }
+
+    private toThumbnailReference(referencia: string, width: number): string {
+        const normalized = this.normalizeReferenceForThumbnail(referencia);
+        if (!normalized) {
+            return referencia;
+        }
+
+        const slashIndex = normalized.lastIndexOf('/');
+        const dotIndex = normalized.lastIndexOf('.');
+        if (slashIndex < 0 || dotIndex <= slashIndex) {
+            return normalized;
+        }
+
+        const fileName = normalized.slice(slashIndex + 1, dotIndex);
+        const extension = normalized.slice(dotIndex);
+        const baseName = fileName.replace(/_(\d+)w$/, '');
+
+        return `${this.thumbnailDirectory}/${baseName}_${width}w${extension}`;
+    }
+
+    private normalizeReferenceForThumbnail(referencia: string): string | null {
+        if (!referencia) {
+            return null;
+        }
+
+        let normalized = referencia.replace(/\\/g, '/').trim();
+
+        if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+            try {
+                normalized = new URL(normalized).pathname;
+            } catch {
+                return null;
+            }
+        }
+
+        if (normalized.startsWith('/')) {
+            normalized = normalized.slice(1);
+        }
+
+        if (normalized.startsWith('images/')) {
+            normalized = normalized.slice('images/'.length);
+        }
+
+        if (normalized.startsWith('imagenes/')) {
+            normalized = normalized.slice('imagenes/'.length);
+        }
+
+        if (!normalized.includes('/')) {
+            return null;
+        }
+
+        return normalized;
     }
 
     async loadImagenes(carpeta: string = '', query: string = ''): Promise<void> {

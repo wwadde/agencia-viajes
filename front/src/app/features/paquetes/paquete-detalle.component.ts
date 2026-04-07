@@ -8,11 +8,12 @@ import { SeoService } from '../../core/services/seo.service';
 import { ReservaService } from '../../core/services/reserva.service';
 import { PaqueteDetalleDTO, SalidaDTO } from '../../core/models/paquete.model';
 import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
+import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pipe';
 
 @Component({
   selector: 'app-paquete-detalle',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, FormsModule, ImagenUrlPipe, NgOptimizedImage],
+  imports: [CommonModule, RouterLink, FormsModule, ImagenUrlPipe, ImagenMobileSrcsetPipe, NgOptimizedImage],
   template: `
     <div class="theme-shell min-h-screen text-[var(--color-ink)] flex flex-col">
       <!-- Navbar Simple -->
@@ -41,14 +42,21 @@ import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
             <!-- Hero Image and Basic Info -->
             <div class="relative h-[60vh] sm:h-[70vh] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/50">
               @if (p.imagenes && p.imagenes.length > 0) {
-                <img
-                  [ngSrc]="p.imagenes[0].url | imagenUrl"
-                  [alt]="p.nombre"
-                  fill
-                  priority
-                  sizes="100vw"
-                  class="w-full h-full object-cover"
-                />
+                <picture>
+                  <source
+                    media="(max-width: 767px)"
+                    [attr.srcset]="p.imagenes[0].url | imagenMobileSrcset"
+                    sizes="100vw"
+                    type="image/webp"
+                  />
+                  <img
+                    [ngSrc]="p.imagenes[0].url | imagenUrl"
+                    [alt]="p.nombre"
+                    fill
+                    sizes="100vw"
+                    class="w-full h-full object-cover"
+                  />
+                </picture>
               } @else {
                 <div class="w-full h-full bg-white/90 flex items-center justify-center text-[var(--color-muted)]">
                   <svg class="w-24 h-24 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,14 +108,22 @@ import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
                       <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         @for(img of p.imagenes; track img.id) {
                           <div class="relative group aspect-square rounded-2xl overflow-hidden bg-white/65 border border-white/80">
-                            <img
-                              [ngSrc]="img.url | imagenUrl"
-                              [alt]="'Imagen de ' + p.nombre"
-                              fill
-                              loading="lazy"
-                              sizes="(max-width: 639px) 50vw, 33vw"
-                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
+                            <picture>
+                              <source
+                                media="(max-width: 767px)"
+                                [attr.srcset]="img.url | imagenMobileSrcset"
+                                sizes="50vw"
+                                type="image/webp"
+                              />
+                              <img
+                                [ngSrc]="img.url | imagenUrl"
+                                [alt]="'Imagen de ' + p.nombre"
+                                fill
+                                loading="lazy"
+                                sizes="(max-width: 639px) 50vw, 33vw"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                            </picture>
                           </div>
                         }
                       </div>

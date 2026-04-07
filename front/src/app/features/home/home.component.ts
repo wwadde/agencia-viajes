@@ -6,11 +6,12 @@ import { PaqueteService } from '../../core/services/paquete.service';
 import { SeoService } from '../../core/services/seo.service';
 import { Router } from '@angular/router';
 import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
+import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pipe';
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, NgOptimizedImage, ImagenUrlPipe],
+  imports: [RouterLink, NgOptimizedImage, ImagenUrlPipe, ImagenMobileSrcsetPipe],
   template: `
     <div class="theme-landing min-h-screen text-stone-900 flex flex-col">
       <!-- Navbar -->
@@ -139,15 +140,22 @@ import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
               <article class="group bg-white/65 border border-white/80 hover:border-[var(--color-sea)]/70 rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-[var(--color-sea)]/20 flex flex-col animate-fade-up">
                 <div class="relative h-56 overflow-hidden bg-[var(--color-cloud)]">
                   @if (paquete.imagenPrincipal) {
-                    <img
-                      [ngSrc]="paquete.imagenPrincipal | imagenUrl"
-                      [alt]="paquete.nombre"
-                      fill
-                      [attr.loading]="$index === 0 ? null : 'lazy'"
-                      [priority]="$index === 0"
-                      sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <picture>
+                      <source
+                        media="(max-width: 767px)"
+                        [attr.srcset]="paquete.imagenPrincipal | imagenMobileSrcset"
+                        sizes="100vw"
+                        type="image/webp"
+                      />
+                      <img
+                        [ngSrc]="paquete.imagenPrincipal | imagenUrl"
+                        [alt]="paquete.nombre"
+                        fill
+                        [attr.loading]="$index === 0 ? null : 'lazy'"
+                        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </picture>
                   } @else {
                     <div class="w-full h-full flex items-center justify-center text-[var(--color-muted)]">
                       <svg class="w-12 h-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
