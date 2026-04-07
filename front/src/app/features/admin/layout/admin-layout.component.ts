@@ -110,6 +110,14 @@ import { AuthService } from '../../../core/services/auth.service';
             </svg>
             Contenidos
           </a>
+
+             <a routerLink="/admin/foro" (click)="closeSidebar()" routerLinkActive="bg-[var(--color-sea)] text-[var(--color-ink)] border-[var(--color-sea-strong)]"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white/70 transition-colors border border-transparent">
+               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-4H5m14 8H5m-2 4h18" />
+              </svg>
+              Foro
+            </a>
         </nav>
 
         <!-- User bottom -->

@@ -40,6 +40,18 @@ export default [
       {
         path: 'contenidos',
         loadComponent: () => import('./contenidos/contenido-list.component')
+      },
+      {
+        path: 'foro',
+        loadComponent: () => import('./foro/foro-list.component')
+      },
+      {
+        path: 'foro/nuevo',
+        loadComponent: () => import('./foro/foro-form.component')
+      },
+      {
+        path: 'foro/edit/:id',
+        loadComponent: () => import('./foro/foro-form.component')
       }
     ]
   }

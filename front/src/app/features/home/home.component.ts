@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
@@ -11,7 +11,7 @@ import { HomeService } from '../../core/services/home.service';
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, NgOptimizedImage, ImagenUrlPipe, ImagenMobileSrcsetPipe],
+  imports: [RouterLink, NgOptimizedImage, ImagenUrlPipe, ImagenMobileSrcsetPipe, DatePipe],
   template: `
     <div class="theme-landing min-h-screen text-stone-900 flex flex-col">
       <!-- Navbar -->
@@ -23,6 +23,9 @@ import { HomeService } from '../../core/services/home.service';
             </div>
 
             <div class="flex items-center gap-4">
+              <a routerLink="/foro" class="px-4 py-2 text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors">
+                Foro
+              </a>
               @if (auth.isAuthenticated()) {
                 <span class="text-sm text-[var(--color-muted)] hidden sm:block">
                   Hola, <strong class="text-[var(--color-ink)]">{{ auth.user()?.usuario }}</strong>
@@ -167,7 +170,11 @@ import { HomeService } from '../../core/services/home.service';
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @for (paquete of homeService.paquetes(); track paquete.id) {
               <article class="group bg-white/65 border border-white/80 hover:border-[var(--color-sea)]/70 rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-[var(--color-sea)]/20 flex flex-col animate-fade-up">
-                <div class="relative h-56 overflow-hidden bg-[var(--color-cloud)]">
+                <a
+                  [routerLink]="['/paquetes', paquete.slug]"
+                  [attr.aria-label]="'Ver detalle de ' + paquete.nombre"
+                  class="relative h-56 overflow-hidden bg-[var(--color-cloud)] block"
+                >
                   @if (paquete.imagenPrincipal) {
                     <picture>
                       <source
@@ -197,7 +204,7 @@ import { HomeService } from '../../core/services/home.service';
                       {{ paquete.duracionDias }} días
                     </span>
                   </div>
-                </div>
+                </a>
 
                 <div class="p-6 flex-grow flex flex-col">
                   <div class="flex items-start justify-between mb-2">
@@ -226,6 +233,57 @@ import { HomeService } from '../../core/services/home.service';
             }
           </div>
         }
+
+        <section class="mt-16">
+          <div class="flex items-center justify-between mb-8 animate-fade-up">
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-bold text-[var(--color-ink)] tracking-tight leading-none">Últimas publicaciones del foro</h2>
+              <p class="text-sm text-[var(--color-muted)] mt-2">Inspírate con historias y consejos recién publicados.</p>
+            </div>
+            <a routerLink="/foro" class="px-4 py-2 rounded-xl border border-[var(--color-sea-strong)]/45 text-sm font-medium text-[var(--color-ink)] hover:bg-white/70 transition-colors">Ver foro</a>
+          </div>
+
+          @if (homeService.foroPosts().length === 0) {
+            <div class="rounded-2xl border border-white/80 bg-white/70 p-6 text-sm text-[var(--color-muted)]">Aún no hay publicaciones recientes en el foro.</div>
+          } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              @for (post of homeService.foroPosts(); track post.id) {
+                <article class="group bg-white/65 border border-white/80 hover:border-[var(--color-sea)]/70 rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-[var(--color-sea)]/20 flex flex-col animate-fade-up">
+                  <a
+                    [routerLink]="['/foro', post.slug]"
+                    [attr.aria-label]="'Leer publicación ' + post.titulo"
+                    class="relative h-52 overflow-hidden bg-[var(--color-cloud)] block"
+                  >
+                    @if (post.imagenPortada) {
+                      <img
+                        [src]="post.imagenPortada | imagenUrl"
+                        [alt]="post.titulo"
+                        loading="lazy"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center text-[var(--color-muted-soft)] text-sm">Sin portada</div>
+                    }
+                  </a>
+
+                  <div class="p-6 flex flex-col flex-grow">
+                    <div class="text-xs uppercase tracking-[0.15em] font-semibold text-[var(--color-muted-soft)] mb-3">
+                      {{ post.fechaPublicacion | date:'dd MMM yyyy' }} · {{ post.totalComentarios }} comentarios
+                    </div>
+                    <h3 class="text-xl font-bold text-[var(--color-ink)] leading-tight">{{ post.titulo }}</h3>
+                    <p class="text-[var(--color-muted)] text-sm line-clamp-3 mt-3 flex-grow">{{ post.resumen }}</p>
+                    <a [routerLink]="['/foro', post.slug]" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-ink)] hover:text-[var(--color-night)] transition-colors">
+                      Leer publicación
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </a>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
       </main>
 
             <!-- Attention Hours -->

@@ -57,7 +57,7 @@ public class ImagenController {
     @ApiResponse(responseCode = "403", description = "Acceso denegado")
     @ApiResponse(responseCode = "500", description = "Error interno al guardar el archivo", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     public ResponseEntity<ImagenSubidaResponse> subir(
-            @Parameter(description = "Carpeta destino permitida (paquetes, iconos, landing)", required = true, example = "paquetes")
+            @Parameter(description = "Carpeta destino permitida (paquetes, iconos, landing, foro)", required = true, example = "paquetes")
             @RequestParam("carpeta") String carpeta,
             @Parameter(description = "Imagen a subir (JPEG, PNG o WebP)", required = true)
             @RequestParam("file") MultipartFile file) {
@@ -73,7 +73,7 @@ public class ImagenController {
     @ApiResponse(responseCode = "400", description = "Parámetros inválidos", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "403", description = "Acceso denegado")
     public ResponseEntity<List<ImagenBibliotecaItemDTO>> listar(
-            @Parameter(description = "Carpeta opcional (paquetes, iconos, landing)", example = "paquetes")
+            @Parameter(description = "Carpeta opcional (paquetes, iconos, landing, foro)", example = "paquetes")
             @RequestParam(value = "carpeta", required = false) String carpeta,
             @Parameter(description = "Búsqueda opcional por nombre de archivo", example = "banner")
             @RequestParam(value = "q", required = false) String busqueda) {

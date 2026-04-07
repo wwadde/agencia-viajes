@@ -12,6 +12,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/paquetes/paquete-detalle.component')
     },
     {
+        path: 'foro',
+        loadComponent: () => import('./features/foro/foro-list.component')
+    },
+    {
+        path: 'foro/:slug',
+        loadComponent: () => import('./features/foro/foro-detalle.component')
+    },
+    {
         path: 'login',
         canActivate: [unauthGuard],
         loadComponent: () => import('./features/auth/login/login.component')

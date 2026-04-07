@@ -33,6 +33,7 @@ import { ImagenSubidaResponse } from '../../../core/models/imagen.model';
             <option value="paquetes">Paquetes</option>
             <option value="iconos">Iconos</option>
             <option value="landing">Landing</option>
+            <option value="foro">Foro</option>
           </select>
         </div>
       </div>
@@ -91,6 +92,7 @@ import { ImagenSubidaResponse } from '../../../core/models/imagen.model';
                 <option value="paquetes">/paquetes</option>
                 <option value="iconos">/iconos</option>
                 <option value="landing">/landing</option>
+                <option value="foro">/foro</option>
               </select>
             </div>
           }

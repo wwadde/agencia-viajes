@@ -10,6 +10,7 @@ export class AuthService {
     private readonly baseUrl = `${environment.apiUrl}/auth`;
     private readonly googleOAuthStartPath = '/oauth2/authorization/google';
     private readonly googleReturnUrlKey = 'auth.google.returnUrl';
+    private readonly sessionHintKey = 'auth.session.active';
     private readonly authCheckCacheMs = 60_000;
     private http = inject(HttpClient);
     private authCheckInFlight: Promise<void> | null = null;
@@ -54,8 +55,10 @@ export class AuthService {
                     this.http.get<UserInfoDTO>(`${this.baseUrl}/me`)
                 );
                 this._user.set(user);
+                this.persistSessionHint(true);
             } catch {
                 this._user.set(null); // No autenticado
+                this.persistSessionHint(false);
             } finally {
                 this.authStateResolved = true;
                 this.lastAuthCheckAt = Date.now();
@@ -65,6 +68,16 @@ export class AuthService {
         })();
 
         return this.authCheckInFlight;
+    }
+
+    /**
+     * Para vistas públicas: evita consultar /auth/me si no hay indicios de sesión previa.
+     */
+    async checkAuthIfSessionLikelyActive(): Promise<void> {
+        if (!this.isAuthenticated() && !this.hasSessionHint()) {
+            return;
+        }
+        await this.checkAuth();
     }
 
     /**
@@ -80,6 +93,7 @@ export class AuthService {
                 this.http.post<UserInfoDTO>(`${this.baseUrl}/login`, credentials)
             );
             this._user.set(user);
+            this.persistSessionHint(true);
             this.authStateResolved = true;
             this.lastAuthCheckAt = Date.now();
         } catch (e) {
@@ -91,6 +105,7 @@ export class AuthService {
                             this.http.post<UserInfoDTO>(`${this.baseUrl}/login`, credentials)
                         );
                         this._user.set(user);
+                        this.persistSessionHint(true);
                         this.authStateResolved = true;
                         this.lastAuthCheckAt = Date.now();
                         this._error.set(null);
@@ -161,6 +176,7 @@ export class AuthService {
             console.error('Error al cerrar sesión', e);
         } finally {
             this._user.set(null);
+            this.persistSessionHint(false);
             this.authStateResolved = true;
             this.lastAuthCheckAt = Date.now();
             this._error.set(null);
@@ -215,5 +231,25 @@ export class AuthService {
 
     private isSafeReturnUrl(url: string | null | undefined): url is string {
         return Boolean(url && url.startsWith('/') && !url.startsWith('//'));
+    }
+
+    private hasSessionHint(): boolean {
+        if (typeof window === 'undefined') {
+            return false;
+        }
+        return window.localStorage.getItem(this.sessionHintKey) === '1';
+    }
+
+    private persistSessionHint(active: boolean): void {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        if (active) {
+            window.localStorage.setItem(this.sessionHintKey, '1');
+            return;
+        }
+
+        window.localStorage.removeItem(this.sessionHintKey);
     }
 }

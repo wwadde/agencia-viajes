@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { PaqueteDetalleDTO } from '../models/paquete.model';
+import { ForoPostDetalleDTO } from '../models/foro.model';
 import { ImagenService } from './imagen.service';
 
 @Injectable({ providedIn: 'root' })
@@ -87,6 +88,61 @@ export class SeoService {
     this.meta.updateTag({
       name: 'description',
       content: 'El paquete solicitado no esta disponible o no existe.',
+    });
+  }
+
+  setForumListingSeo(): void {
+    const foroUrl = `${this.siteOrigin}/foro`;
+    const title = 'Foro Viajero | Historias, Consejos y Comunidad';
+    const description =
+      'Descubre guias de viaje, relatos e ideas practicas en el foro de nuestra agencia. Comenta y conecta con otros viajeros.';
+
+    this.title.setTitle(title);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ name: 'keywords', content: 'foro de viajes, consejos de viaje, comunidad viajera, blog turismo' });
+
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:url', content: foroUrl });
+    this.meta.updateTag({ property: 'og:image', content: `${this.siteOrigin}/favicon.ico` });
+
+    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+    this.meta.updateTag({ name: 'twitter:image', content: `${this.siteOrigin}/favicon.ico` });
+
+    this.updateCanonical(foroUrl);
+  }
+
+  setForumPostSeo(post: ForoPostDetalleDTO, slug: string): void {
+    const pageUrl = `${this.siteOrigin}/foro/${slug}`;
+    const title = this.truncate(`${post.titulo} | Foro Viajero`, 60);
+    const description = this.truncate(post.resumen, 160);
+    const firstImage = post.bloques.find((block) => block.tipo === 'IMAGEN')?.contenido;
+    const imageUrl = firstImage
+      ? this.toAbsoluteUrl(this.imagenService.buildUrl(firstImage))
+      : `${this.siteOrigin}/favicon.ico`;
+
+    this.title.setTitle(title);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ name: 'keywords', content: `${post.titulo}, foro viajes, tips de viaje, experiencias` });
+
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:url', content: pageUrl });
+    this.meta.updateTag({ property: 'og:image', content: imageUrl });
+
+    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+    this.meta.updateTag({ name: 'twitter:image', content: imageUrl });
+
+    this.updateCanonical(pageUrl);
+  }
+
+  setForumNotFoundSeo(): void {
+    this.title.setTitle('Publicación no encontrada | Foro Viajero');
+    this.meta.updateTag({
+      name: 'description',
+      content: 'La publicación del foro no existe o no esta disponible en este momento.',
     });
   }
 

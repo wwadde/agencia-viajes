@@ -79,6 +79,7 @@ public class WebSecurity {
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/home/**").permitAll()
                         .requestMatchers("/api/paquetes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/foro/**").permitAll()
                         .requestMatchers("/api/destinos/**").permitAll()
                         .requestMatchers("/api/contenidos/**").permitAll()
                         .requestMatchers("/api/agendas/**").permitAll()

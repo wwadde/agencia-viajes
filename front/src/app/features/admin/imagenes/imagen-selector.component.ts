@@ -1,4 +1,4 @@
-import { Component, input, output, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, input, output, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImagenService } from '../../../core/services/imagen.service';
@@ -39,6 +39,7 @@ import { ImagenBibliotecaItemDTO } from '../../../core/models/imagen.model';
               <option value="paquetes">Paquetes</option>
               <option value="iconos">Iconos</option>
               <option value="landing">Landing</option>
+              <option value="foro">Foro</option>
             </select>
             <input type="text" [(ngModel)]="query" (input)="onSearch()" placeholder="Buscar..." class="flex-1 bg-[var(--color-sea)]/45 border-none rounded-xl px-4 py-2 text-sm text-[var(--color-night)] focus:ring-2 focus:ring-[var(--color-ink)] outline-none" />
           </div>
@@ -100,6 +101,7 @@ export class ImagenSelectorComponent implements OnInit {
   // Inputs
   isOpen = input(false);
   initialSelection = input<string | null>(null);
+  initialFolder = input<string>('');
   
   // Outputs
   close = output<void>();
@@ -114,9 +116,26 @@ export class ImagenSelectorComponent implements OnInit {
   // Local state for selection
   selectedRef = signal<string | null>(null);
 
+  constructor() {
+    effect(() => {
+      if (!this.isOpen()) {
+        return;
+      }
+
+      this.selectedRef.set(this.initialSelection());
+      if (this.initialFolder()) {
+        this.carpeta = this.initialFolder();
+      }
+      this.loadImages();
+    });
+  }
+
   ngOnInit() {
     this.selectedRef.set(this.initialSelection());
     if (this.isOpen()) {
+      if (this.initialFolder()) {
+        this.carpeta = this.initialFolder();
+      }
       this.loadImages();
     }
   }
