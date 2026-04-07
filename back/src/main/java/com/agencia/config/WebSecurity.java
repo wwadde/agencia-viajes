@@ -77,6 +77,7 @@ public class WebSecurity {
                         .requestMatchers(HttpMethod.POST, "/api/pagos/webhook", "/api/pagos/webhook/payu").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/sitemap.xml").permitAll()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/home/**").permitAll()
                         .requestMatchers("/api/paquetes/**").permitAll()
                         .requestMatchers("/api/destinos/**").permitAll()
                         .requestMatchers("/api/contenidos/**").permitAll()
