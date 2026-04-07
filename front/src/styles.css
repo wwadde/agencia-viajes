@@ -19,6 +19,10 @@ body {
 	min-height: 100%;
 }
 
+html {
+	scroll-behavior: smooth;
+}
+
 .theme-landing {
 	background:
 		radial-gradient(circle at 8% 5%, rgb(255 255 255 / 62%) 0%, transparent 40%),
@@ -82,6 +86,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
 	.animate-fade-up,
 	.animate-fade-up-delay,
 	.animate-fade-up-delay-2,

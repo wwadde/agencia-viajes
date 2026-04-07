@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { PaqueteService } from '../../core/services/paquete.service';
 import { SeoService } from '../../core/services/seo.service';
 import { Router } from '@angular/router';
 import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
 import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pipe';
+import { HomeService } from '../../core/services/home.service';
 
 @Component({
   selector: 'app-home',
@@ -54,20 +54,34 @@ import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pi
       </nav>
 
       <!-- Hero Section -->
-      <header class="relative overflow-hidden min-h-[80vh] border-b border-white/30 hero-glow">
-        <img
-          ngSrc="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2200&auto=format&fit=crop"
-          alt=""
-          aria-hidden="true"
-          fill
-          priority
-          sizes="100vw"
-          class="absolute inset-0 h-full w-full object-cover scale-[1.03]"
-        />
+      <header class="relative overflow-hidden min-h-[calc(100svh-4rem)] border-b border-white/30 hero-glow">
+        @if (currentLandingSlide(); as slide) {
+          <picture>
+            <source
+              media="(max-width: 767px)"
+              [attr.srcset]="currentLandingMobileSrcset()"
+              sizes="100vw"
+              type="image/webp"
+            />
+            <img
+              [ngSrc]="slide.url | imagenUrl"
+              [alt]="slide.nombre"
+              fill
+              priority
+              sizes="100vw"
+              class="absolute inset-0 h-full w-full object-cover scale-[1.03] transition-opacity duration-700"
+            />
+          </picture>
+        } @else {
+          <div
+            aria-hidden="true"
+            class="absolute inset-0 bg-[linear-gradient(135deg,#5c7b80_0%,#3a5a61_48%,#1f2a2d_100%)]"
+          ></div>
+        }
         <div class="absolute inset-0 bg-gradient-to-r from-[var(--color-night)]/78 via-[var(--color-night)]/62 to-[var(--color-ink)]/30"></div>
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(226,218,221,0.32),transparent_44%),radial-gradient(circle_at_82%_18%,rgba(218,226,223,0.35),transparent_38%)]"></div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[80vh] flex items-center">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(100svh-4rem)] flex items-center">
           <div class="max-w-2xl text-balance animate-fade-up">
             <span class="inline-flex px-3 py-1 mb-6 text-xs font-semibold bg-white/20 text-white rounded-full border border-white/35 backdrop-blur-md tracking-[0.14em] uppercase">
               Agencia boutique de experiencias
@@ -94,15 +108,30 @@ import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pi
             </div>
           </div>
         </div>
+
+        @if (homeService.landingSlides().length > 1) {
+          <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full bg-black/25 backdrop-blur-sm border border-white/20 px-3 py-2">
+            @for (slide of homeService.landingSlides(); track slide.referencia) {
+              <button
+                type="button"
+                [attr.aria-label]="'Ir a imagen ' + ($index + 1)"
+                [class.bg-white]="activeLandingSlideIndex() === $index"
+                [class.bg-white/45]="activeLandingSlideIndex() !== $index"
+                class="h-2.5 w-2.5 rounded-full transition-colors"
+                (click)="goToLandingSlide($index)"
+              ></button>
+            }
+          </div>
+        }
       </header>
 
       <!-- Main Content: Paquetes -->
-      <main id="paquetes" class="flex-grow max-w-7xl mx-auto w-full py-16 px-4 sm:px-6 lg:px-8">
+      <main id="paquetes" class="scroll-mt-20 flex-grow max-w-7xl mx-auto w-full py-16 px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between mb-10 animate-fade-up">
           <h2 class="text-2xl sm:text-3xl font-bold text-[var(--color-ink)] tracking-tight leading-none">Paquetes Populares</h2>
         </div>
 
-        @if (paqueteService.loading()) {
+        @if (homeService.loading()) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @for (i of [1,2,3]; track i) {
               <div class="bg-white/60 border border-white/70 rounded-2xl overflow-hidden animate-pulse">
@@ -119,24 +148,24 @@ import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pi
               </div>
             }
           </div>
-        } @else if (paqueteService.error()) {
+        } @else if (homeService.error()) {
           <div class="bg-red-100 border border-red-300 rounded-2xl p-8 text-center">
             <svg class="w-12 h-12 text-red-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <h3 class="text-lg font-medium text-[var(--color-ink)] mb-2">Error de conexión</h3>
-            <p class="text-[var(--color-muted)]">{{ paqueteService.error() }}</p>
-            <button (click)="paqueteService.loadPaquetes()" class="mt-6 px-4 py-2 text-sm font-medium text-white bg-[var(--color-ink)] hover:bg-[var(--color-night)] rounded-lg transition-colors border border-transparent">
+            <p class="text-[var(--color-muted)]">{{ homeService.error() }}</p>
+            <button (click)="reloadHomeData()" class="mt-6 px-4 py-2 text-sm font-medium text-white bg-[var(--color-ink)] hover:bg-[var(--color-night)] rounded-lg transition-colors border border-transparent">
               Reintentar
             </button>
           </div>
-        } @else if (paqueteService.paquetes().length === 0) {
+        } @else if (homeService.paquetes().length === 0) {
           <div class="bg-white/70 border border-white/80 rounded-2xl p-12 text-center text-[var(--color-muted)]">
             No hay paquetes disponibles en este momento.
           </div>
         } @else {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            @for (paquete of paqueteService.paquetes(); track paquete.id) {
+            @for (paquete of homeService.paquetes(); track paquete.id) {
               <article class="group bg-white/65 border border-white/80 hover:border-[var(--color-sea)]/70 rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-[var(--color-sea)]/20 flex flex-col animate-fade-up">
                 <div class="relative h-56 overflow-hidden bg-[var(--color-cloud)]">
                   @if (paquete.imagenPrincipal) {
@@ -254,15 +283,79 @@ import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pi
     </div>
   `
 })
-export default class HomeComponent implements OnInit {
+export default class HomeComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
-  paqueteService = inject(PaqueteService);
+  homeService = inject(HomeService);
   seo = inject(SeoService);
   router = inject(Router);
 
-  ngOnInit() {
+  activeLandingSlideIndex = signal(0);
+
+  currentLandingSlide = computed(() => {
+    const slides = this.homeService.landingSlides();
+    if (slides.length === 0) {
+      return null;
+    }
+
+    const index = this.activeLandingSlideIndex() % slides.length;
+    return slides[index] ?? null;
+  });
+
+  currentLandingMobileSrcset = computed(() => {
+    const slide = this.currentLandingSlide();
+    if (!slide) {
+      return '';
+    }
+
+    return `${slide.thumbnailSmallUrl} 480w, ${slide.thumbnailMediumUrl} 960w`;
+  });
+
+  private carouselIntervalId: ReturnType<typeof setInterval> | null = null;
+
+  async ngOnInit() {
     this.seo.setHomeDefaults();
-    this.paqueteService.loadPaquetes();
+    await this.reloadHomeData();
+  }
+
+  ngOnDestroy() {
+    this.stopCarousel();
+  }
+
+  async reloadHomeData() {
+    await this.homeService.loadHomeData();
+    this.activeLandingSlideIndex.set(0);
+    this.startCarousel();
+  }
+
+  goToLandingSlide(index: number) {
+    this.activeLandingSlideIndex.set(index);
+    this.startCarousel();
+  }
+
+  private startCarousel() {
+    this.stopCarousel();
+
+    if (this.homeService.landingSlides().length < 2) {
+      return;
+    }
+
+    this.carouselIntervalId = setInterval(() => {
+      const totalSlides = this.homeService.landingSlides().length;
+      if (totalSlides < 2) {
+        return;
+      }
+
+      this.activeLandingSlideIndex.update((current) => (current + 1) % totalSlides);
+    }, 7000);
+  }
+
+  private stopCarousel() {
+    if (!this.carouselIntervalId) {
+      return;
+    }
+
+    clearInterval(this.carouselIntervalId);
+    this.carouselIntervalId = null;
   }
 
   async onLogout() {

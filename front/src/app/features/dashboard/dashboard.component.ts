@@ -48,7 +48,7 @@ import { AuthService } from '../../core/services/auth.service';
     <!-- Hero Header / Welcome -->
     <div class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
        <div class="absolute inset-0 z-0">
-          <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center opacity-20 mix-blend-screen mix-blend-luminosity grayscale"></div>
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(218,226,223,0.34),transparent_42%),radial-gradient(circle_at_82%_20%,rgba(226,218,221,0.26),transparent_36%),linear-gradient(140deg,rgba(40,53,57,0.44),rgba(31,42,45,0.26))]"></div>
           <div class="absolute inset-0 bg-gradient-to-b from-[var(--color-night)]/20 via-[var(--color-night)]/65 to-[var(--color-night)]"></div>
           <div class="absolute inset-0 bg-gradient-to-r from-[var(--color-sea)]/20 to-[var(--color-rose)]/20"></div>
        </div>

@@ -10,7 +10,11 @@ export class AuthService {
     private readonly baseUrl = `${environment.apiUrl}/auth`;
     private readonly googleOAuthStartPath = '/oauth2/authorization/google';
     private readonly googleReturnUrlKey = 'auth.google.returnUrl';
+    private readonly authCheckCacheMs = 60_000;
     private http = inject(HttpClient);
+    private authCheckInFlight: Promise<void> | null = null;
+    private authStateResolved = false;
+    private lastAuthCheckAt = 0;
 
     // Private writable state
     private _user = signal<UserInfoDTO | null>(null);
@@ -31,20 +35,36 @@ export class AuthService {
     /**
      * Obtiene la información del usuario actual si existe una sesión activa
      */
-    async checkAuth(): Promise<void> {
-        this._loading.set(true);
-        this._error.set(null);
-        this._violations.set([]);
-        try {
-            const user = await firstValueFrom(
-                this.http.get<UserInfoDTO>(`${this.baseUrl}/me`)
-            );
-            this._user.set(user);
-        } catch (e) {
-            this._user.set(null); // No autenticado
-        } finally {
-            this._loading.set(false);
+    async checkAuth(force: boolean = false): Promise<void> {
+        const now = Date.now();
+        if (!force && this.authStateResolved && now - this.lastAuthCheckAt < this.authCheckCacheMs) {
+            return;
         }
+
+        if (this.authCheckInFlight) {
+            return this.authCheckInFlight;
+        }
+
+        this.authCheckInFlight = (async () => {
+            this._loading.set(true);
+            this._error.set(null);
+            this._violations.set([]);
+            try {
+                const user = await firstValueFrom(
+                    this.http.get<UserInfoDTO>(`${this.baseUrl}/me`)
+                );
+                this._user.set(user);
+            } catch {
+                this._user.set(null); // No autenticado
+            } finally {
+                this.authStateResolved = true;
+                this.lastAuthCheckAt = Date.now();
+                this.authCheckInFlight = null;
+                this._loading.set(false);
+            }
+        })();
+
+        return this.authCheckInFlight;
     }
 
     /**
@@ -60,6 +80,8 @@ export class AuthService {
                 this.http.post<UserInfoDTO>(`${this.baseUrl}/login`, credentials)
             );
             this._user.set(user);
+            this.authStateResolved = true;
+            this.lastAuthCheckAt = Date.now();
         } catch (e) {
             if (e instanceof HttpErrorResponse) {
                 // Reintento único para casos esporádicos de 403 (p.ej. cookie XSRF recién regenerada).
@@ -69,6 +91,8 @@ export class AuthService {
                             this.http.post<UserInfoDTO>(`${this.baseUrl}/login`, credentials)
                         );
                         this._user.set(user);
+                        this.authStateResolved = true;
+                        this.lastAuthCheckAt = Date.now();
                         this._error.set(null);
                         this._violations.set([]);
                         return;
@@ -137,6 +161,8 @@ export class AuthService {
             console.error('Error al cerrar sesión', e);
         } finally {
             this._user.set(null);
+            this.authStateResolved = true;
+            this.lastAuthCheckAt = Date.now();
             this._error.set(null);
             this._loading.set(false);
         }

@@ -5,38 +5,101 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 const backendTarget = process.env['BACKEND_URL'] ?? 'http://localhost:8080';
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+const proxyPathPrefixes = ['/api', '/oauth2', '/login/oauth2', '/images', '/imagenes'];
 
 app.set('trust proxy', true);
 
-// SSR en Node necesita alcanzar el backend para resolver rutas de paquetes en servidor.
-app.use(
-  createProxyMiddleware({
-    pathFilter: ['/api/**', '/oauth2/**', '/login/oauth2/**', '/images/**', '/imagenes/**'],
-    target: backendTarget,
-    changeOrigin: true,
-    xfwd: true,
-    secure: false,
-  }),
-);
+app.use((req, res, next) => {
+  if (!shouldProxyPath(req.path)) {
+    return next();
+  }
 
-// Compatibilidad adicional para rutas base sin slash final.
-app.use(
-  ['/api', '/oauth2', '/login/oauth2', '/images', '/imagenes'],
-  createProxyMiddleware({
-    target: backendTarget,
-    changeOrigin: true,
-    xfwd: true,
-    secure: false,
-  }),
-);
+  proxyToBackend(req, res).catch(next);
+});
+
+function shouldProxyPath(pathname: string): boolean {
+  return proxyPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+async function proxyToBackend(req: express.Request, res: express.Response): Promise<void> {
+  const targetUrl = new URL(req.originalUrl, backendTarget);
+  const headers = buildProxyHeaders(req);
+  const method = req.method.toUpperCase();
+  const requestInit: RequestInit & { duplex?: 'half' } = {
+    method,
+    headers,
+    redirect: 'manual',
+  };
+
+  if (method !== 'GET' && method !== 'HEAD') {
+    requestInit.body = req as unknown as BodyInit;
+    requestInit.duplex = 'half';
+  }
+
+  const response = await fetch(targetUrl, requestInit);
+  res.status(response.status);
+
+  response.headers.forEach((value, key) => {
+    const header = key.toLowerCase();
+    if (header === 'content-length' || header === 'connection' || header === 'transfer-encoding') {
+      return;
+    }
+    res.setHeader(key, value);
+  });
+
+  if (!response.body) {
+    res.end();
+    return;
+  }
+
+  await pipeline(Readable.fromWeb(response.body as any), res);
+}
+
+function buildProxyHeaders(req: express.Request): Headers {
+  const headers = new Headers();
+
+  Object.entries(req.headers).forEach(([name, value]) => {
+    if (name === 'host' || name === 'connection' || name === 'content-length') {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      headers.set(name, value.join(', '));
+      return;
+    }
+
+    if (typeof value === 'string') {
+      headers.set(name, value);
+    }
+  });
+
+  const clientIp = req.ip ?? req.socket.remoteAddress ?? '';
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const xForwardedFor = Array.isArray(forwardedFor)
+    ? forwardedFor.join(', ')
+    : forwardedFor;
+
+  if (clientIp) {
+    headers.set('x-forwarded-for', xForwardedFor ? `${xForwardedFor}, ${clientIp}` : clientIp);
+  }
+  headers.set('x-forwarded-proto', req.protocol);
+
+  const host = req.get('host');
+  if (host) {
+    headers.set('x-forwarded-host', host);
+  }
+
+  return headers;
+}
 
 /**
  * Serve static files from /browser
