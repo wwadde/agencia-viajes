@@ -120,6 +120,33 @@ class PaqueteServiceTest {
         verify(paqueteRepository, never()).existsBySlugAndIdNot(any(), any());
     }
 
+        @Test
+        void crear_debeNormalizarTildesYEnieEnSlug() {
+                Destino destino = Destino.builder().id(12L).nombre("Chile").build();
+                when(destinoRepository.findById(12L)).thenReturn(Optional.of(destino));
+                when(paqueteRepository.findUsedSlugsByBase("aventura-en-canon-del-nuble", null)).thenReturn(List.of());
+                when(paqueteRepository.save(any(Paquete.class))).thenReturn(Paquete.builder().id(55L).build());
+
+                PaqueteUpsertDTO dto = new PaqueteUpsertDTO(
+                                "Aventura en Cañón del Ñuble",
+                                "",
+                                "Descripcion",
+                                "Detalle",
+                                4,
+                                true,
+                                false,
+                                12L,
+                                List.of(new ImagenPaqueteUpsertDTO("paquetes/nuble.jpg", 0, true)),
+                                List.of()
+                );
+
+                paqueteService.crear(dto);
+
+                ArgumentCaptor<Paquete> captor = ArgumentCaptor.forClass(Paquete.class);
+                verify(paqueteRepository).save(captor.capture());
+                assertEquals("aventura-en-canon-del-nuble", captor.getValue().getSlug());
+        }
+
     @Test
     void actualizar_debeConservarImagenesSiNoSeEnviaCampoImagenes() {
         Paquete paquete = Paquete.builder()

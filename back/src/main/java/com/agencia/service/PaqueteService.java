@@ -37,6 +37,7 @@ public class PaqueteService {
 
     private static final Pattern NON_ALNUM = Pattern.compile("[^a-z0-9]+");
     private static final Pattern MULTI_DASH = Pattern.compile("-{2,}");
+    private static final Pattern COMBINING_MARKS = Pattern.compile("\\p{M}+");
 
     private final PaqueteRepository paqueteRepository;
     private final DestinoRepository destinoRepository;
@@ -277,8 +278,12 @@ public class PaqueteService {
     }
 
     private String slugify(String raw) {
-        String normalized = Normalizer.normalize(raw, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "")
+        String source = raw == null ? "" : raw;
+        String normalized = Normalizer.normalize(source, Normalizer.Form.NFD)
+                .replace('ñ', 'n')
+                .replace('Ñ', 'N');
+
+        normalized = COMBINING_MARKS.matcher(normalized).replaceAll("")
                 .toLowerCase(Locale.ROOT)
                 .trim();
 

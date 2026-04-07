@@ -350,9 +350,15 @@ export default class PaqueteFormComponent implements OnInit {
   generateSlug() {
     if (!this.isEditMode()) {
       const nombre = this.form.get('nombre')?.value || '';
-      const slug = nombre.toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-');
+      const slug = nombre
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
       this.form.get('slug')?.setValue(slug, { emitEvent: false });
     }
   }
