@@ -14,51 +14,73 @@ import java.nio.file.Path;
 @Slf4j
 final class StorageImageProcessor {
 
+    static final int SMALL_THUMBNAIL_WIDTH = 480;
+    static final int MEDIUM_THUMBNAIL_WIDTH = 960;
+
     private static final int WEBP_MIN_QUALITY = 45;
     private static final int WEBP_QUALITY_STEP = 8;
     private static final int WEBP_METHOD = 6;
     private static final int WEBP_DEFLATE_LEVEL = 9;
     private static final int THUMBNAIL_MAX_QUALITY = 76;
+    private static final int MAX_ORIGINAL_WIDTH = 1920;
+    private static final int MAX_ORIGINAL_HEIGHT = 1080;
 
     private final int webpQuality;
-    private final int thumbnailWidth;
-    private final int thumbnailHeight;
 
-    StorageImageProcessor(int webpQuality, int thumbnailWidth, int thumbnailHeight) {
+    StorageImageProcessor(int webpQuality) {
         this.webpQuality = webpQuality;
-        this.thumbnailWidth = thumbnailWidth;
-        this.thumbnailHeight = thumbnailHeight;
     }
 
     void writeOptimizedFiles(
             MultipartFile file,
             Path destination,
-            Path thumbnailDestination,
+            Path smallThumbnailDestination,
+            Path mediumThumbnailDestination,
             String referencia,
             boolean sourceAlreadyWebp
     ) {
         try {
             Files.createDirectories(destination.getParent());
+            Files.createDirectories(smallThumbnailDestination.getParent());
+            Files.createDirectories(mediumThumbnailDestination.getParent());
             byte[] originalBytes = file.getBytes();
             ImmutableImage image = ImmutableImage.loader().fromBytes(originalBytes);
+            ImmutableImage normalizedOriginal = resizeToMaxOriginal(image);
 
-            byte[] optimizedMain = optimizeMainImage(image, originalBytes, sourceAlreadyWebp);
+            byte[] optimizedMain = optimizeMainImage(normalizedOriginal, originalBytes, sourceAlreadyWebp);
             Files.write(destination, optimizedMain);
 
-            ImmutableImage thumbnail = image.max(thumbnailWidth, thumbnailHeight, ScaleMethod.Lanczos3);
-            byte[] optimizedThumbnail = optimizeThumbnail(thumbnail);
-            Files.write(thumbnailDestination, optimizedThumbnail);
+            byte[] optimizedSmallThumbnail = optimizeThumbnail(resizeToWidth(normalizedOriginal, SMALL_THUMBNAIL_WIDTH));
+            Files.write(smallThumbnailDestination, optimizedSmallThumbnail);
+
+            byte[] optimizedMediumThumbnail = optimizeThumbnail(resizeToWidth(normalizedOriginal, MEDIUM_THUMBNAIL_WIDTH));
+            Files.write(mediumThumbnailDestination, optimizedMediumThumbnail);
 
             log.info(
-                    "Optimización {}: original={} bytes, principal={} bytes, thumbnail={} bytes",
+                    "Optimización {}: original={} bytes, principal={} bytes, thumb-small={} bytes, thumb-medium={} bytes",
                     referencia,
                     originalBytes.length,
                     optimizedMain.length,
-                    optimizedThumbnail.length
+                    optimizedSmallThumbnail.length,
+                    optimizedMediumThumbnail.length
             );
         } catch (IOException | RuntimeException e) {
             throw new AlmacenamientoException("No se pudo guardar el archivo: " + referencia, e);
         }
+    }
+
+    private ImmutableImage resizeToMaxOriginal(ImmutableImage image) {
+        if (image.width <= MAX_ORIGINAL_WIDTH && image.height <= MAX_ORIGINAL_HEIGHT) {
+            return image;
+        }
+        return image.scaleToWidth(MAX_ORIGINAL_WIDTH, ScaleMethod.Lanczos3);
+    }
+
+    private ImmutableImage resizeToWidth(ImmutableImage image, int targetWidth) {
+        if (image.width <= targetWidth) {
+            return image;
+        }
+        return image.scaleToWidth(targetWidth, ScaleMethod.Lanczos3);
     }
 
     private byte[] optimizeMainImage(ImmutableImage image, byte[] originalBytes, boolean sourceAlreadyWebp) {
@@ -97,7 +119,7 @@ final class StorageImageProcessor {
         log.warn(
                 "No se logró reducir por debajo del original (original={} bytes, mejor={} bytes, q={})",
                 maxTargetBytes,
-                best == null ? -1 : best.length,
+                best.length,
                 bestQuality
         );
         return best;

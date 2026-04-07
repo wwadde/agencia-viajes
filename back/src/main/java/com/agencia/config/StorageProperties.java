@@ -20,10 +20,7 @@ public record StorageProperties(
         String location,
         long maxFileSizeBytes,
         List<String> allowedDirectories,
-        int webpQuality,
-        int thumbnailWidth,
-        int thumbnailHeight,
-        String thumbnailSuffix
+        int webpQuality
 ) {
     public StorageProperties {
         if (location == null || location.isBlank()) {
@@ -32,20 +29,9 @@ public record StorageProperties(
         if (maxFileSizeBytes <= 0) {
             maxFileSizeBytes = 4 * 1024 * 1024L; // 4 MB por defecto
         }
-        if (allowedDirectories == null || allowedDirectories.isEmpty()) {
-            allowedDirectories = List.of("paquetes", "iconos", "landing");
-        }
+
         if (webpQuality < 1 || webpQuality > 100) {
             webpQuality = 82;
-        }
-        if (thumbnailWidth <= 0) {
-            thumbnailWidth = 480;
-        }
-        if (thumbnailHeight <= 0) {
-            thumbnailHeight = 320;
-        }
-        if (thumbnailSuffix == null || thumbnailSuffix.isBlank()) {
-            thumbnailSuffix = "_thumb";
         }
     }
 }

@@ -52,15 +52,10 @@ public class FileSystemStorageService implements StorageService {
     public FileSystemStorageService(StorageProperties properties) {
         this.pathSupport = new StoragePathSupport(
                 properties.location(),
-                properties.allowedDirectories(),
-                properties.thumbnailSuffix()
+                properties.allowedDirectories()
         );
         this.imageValidator = new StorageImageValidator(properties.maxFileSizeBytes());
-        this.imageProcessor = new StorageImageProcessor(
-                properties.webpQuality(),
-                properties.thumbnailWidth(),
-                properties.thumbnailHeight()
-        );
+        this.imageProcessor = new StorageImageProcessor(properties.webpQuality());
         initDirectory();
     }
 
@@ -81,18 +76,22 @@ public class FileSystemStorageService implements StorageService {
         String contentType = imageValidator.validateAndGetContentType(file);
         imageValidator.validateMagicBytes(file, contentType);
 
-        String directory = pathSupport.validateAndNormalizeDirectory(carpeta);
+        String directory = pathSupport.validateAndNormalizeUploadDirectory(carpeta);
         String filename = pathSupport.buildOptimizedFilename(nombreArchivo);
-        String thumbnailFilename = pathSupport.buildThumbnailFilename(nombreArchivo);
+        String smallThumbnailFilename = pathSupport.buildThumbnailFilename(nombreArchivo, StorageImageProcessor.SMALL_THUMBNAIL_WIDTH);
+        String mediumThumbnailFilename = pathSupport.buildThumbnailFilename(nombreArchivo, StorageImageProcessor.MEDIUM_THUMBNAIL_WIDTH);
         String referencia = directory + "/" + filename;
-        String thumbnailReferencia = directory + "/" + thumbnailFilename;
+        String smallThumbnailReferencia = StoragePathSupport.MINIATURES_DIRECTORY + "/" + smallThumbnailFilename;
+        String mediumThumbnailReferencia = StoragePathSupport.MINIATURES_DIRECTORY + "/" + mediumThumbnailFilename;
         Path destination = pathSupport.resolveSecureReference(referencia);
-        Path thumbnailDestination = pathSupport.resolveSecureReference(thumbnailReferencia);
+        Path smallThumbnailDestination = pathSupport.resolveSecureReference(smallThumbnailReferencia);
+        Path mediumThumbnailDestination = pathSupport.resolveSecureReference(mediumThumbnailReferencia);
 
         imageProcessor.writeOptimizedFiles(
                 file,
                 destination,
-                thumbnailDestination,
+                smallThumbnailDestination,
+                mediumThumbnailDestination,
                 referencia,
                 "image/webp".equals(contentType)
         );
@@ -127,7 +126,9 @@ public class FileSystemStorageService implements StorageService {
         String query = busqueda == null ? "" : busqueda.trim().toLowerCase(Locale.ROOT);
 
         Set<String> carpetasObjetivo = (carpeta == null || carpeta.isBlank())
-                ? pathSupport.allowedDirectories()
+                ? pathSupport.allowedDirectories().stream()
+                    .filter(directory -> !StoragePathSupport.MINIATURES_DIRECTORY.equals(directory))
+                    .collect(java.util.stream.Collectors.toUnmodifiableSet())
                 : Set.of(pathSupport.validateAndNormalizeDirectory(carpeta));
 
         List<StorageFileInfo> items = new ArrayList<>();
@@ -168,14 +169,20 @@ public class FileSystemStorageService implements StorageService {
     }
 
     private void deleteGeneratedPairIfExists(String normalizedReference) throws IOException {
-        String thumbnailReference = pathSupport.toThumbnailReference(normalizedReference);
-        if (!thumbnailReference.equals(normalizedReference)) {
-            Files.deleteIfExists(pathSupport.resolveSecureReference(thumbnailReference));
+        String smallThumbnailReference = pathSupport.toThumbnailReference(normalizedReference, StorageImageProcessor.SMALL_THUMBNAIL_WIDTH);
+        if (!smallThumbnailReference.equals(normalizedReference)) {
+            Files.deleteIfExists(pathSupport.resolveSecureReference(smallThumbnailReference));
         }
 
-        String originalReference = pathSupport.toOriginalReferenceFromThumbnail(normalizedReference);
-        if (originalReference != null && !originalReference.equals(normalizedReference)) {
-            Files.deleteIfExists(pathSupport.resolveSecureReference(originalReference));
+        String mediumThumbnailReference = pathSupport.toThumbnailReference(normalizedReference, StorageImageProcessor.MEDIUM_THUMBNAIL_WIDTH);
+        if (!mediumThumbnailReference.equals(normalizedReference)) {
+            Files.deleteIfExists(pathSupport.resolveSecureReference(mediumThumbnailReference));
+        }
+
+        for (String originalReference : pathSupport.toOriginalReferencesFromThumbnail(normalizedReference)) {
+            if (!originalReference.equals(normalizedReference)) {
+                Files.deleteIfExists(pathSupport.resolveSecureReference(originalReference));
+            }
         }
     }
 
@@ -186,7 +193,7 @@ public class FileSystemStorageService implements StorageService {
         String safeName;
         try {
             safeName = sanitizeFilename(fileName);
-        } catch (ArchivoInvalidoException _) {
+        } catch (ArchivoInvalidoException ignored) {
             log.warn("Archivo omitido de biblioteca por nombre inválido: {}", fileName);
             return;
         }
@@ -195,7 +202,7 @@ public class FileSystemStorageService implements StorageService {
             return;
         }
 
-        if (pathSupport.isGeneratedThumbnail(fileName)) {
+        if (pathSupport.isGeneratedThumbnail(carpeta, fileName)) {
             return;
         }
 

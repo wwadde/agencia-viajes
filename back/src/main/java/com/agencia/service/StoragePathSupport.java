@@ -15,19 +15,18 @@ import java.util.stream.Collectors;
 final class StoragePathSupport {
 
     private static final String WEBP_EXTENSION = ".webp";
+    static final String MINIATURES_DIRECTORY = "miniaturas";
     private static final Pattern ILLEGAL_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]");
     private static final Pattern SAFE_DIRECTORY = Pattern.compile("^[a-z0-9_-]+$");
+    private static final Pattern DIMENSION_SUFFIX = Pattern.compile("_(\\d+)w$");
 
     private final Path rootLocation;
     private final Set<String> allowedDirectories;
-    private final String thumbnailSuffix;
-
-    StoragePathSupport(String location, List<String> configuredDirectories, String thumbnailSuffix) {
+    StoragePathSupport(String location, List<String> configuredDirectories) {
         this.rootLocation = Paths.get(location).toAbsolutePath().normalize();
         this.allowedDirectories = configuredDirectories.stream()
                 .map(this::normalizeDirectoryToken)
                 .collect(Collectors.toUnmodifiableSet());
-        this.thumbnailSuffix = thumbnailSuffix;
     }
 
     Path rootLocation() {
@@ -85,6 +84,14 @@ final class StoragePathSupport {
         return normalized;
     }
 
+    String validateAndNormalizeUploadDirectory(String carpeta) {
+        String normalized = validateAndNormalizeDirectory(carpeta);
+        if (MINIATURES_DIRECTORY.equals(normalized)) {
+            throw new CarpetaInvalidaException("Carpeta no permitida para carga directa: " + carpeta);
+        }
+        return normalized;
+    }
+
     String sanitizeFilename(String filename) {
         if (filename == null || filename.isBlank()) {
             throw new ArchivoInvalidoException("El archivo no tiene nombre válido");
@@ -111,31 +118,44 @@ final class StoragePathSupport {
         return buildBaseName(originalName) + WEBP_EXTENSION;
     }
 
-    String buildThumbnailFilename(String originalName) {
-        return buildBaseName(originalName) + thumbnailSuffix + WEBP_EXTENSION;
+    String buildThumbnailFilename(String originalName, int width) {
+        return buildBaseName(originalName) + "_" + width + "w" + WEBP_EXTENSION;
     }
 
-    String toThumbnailReference(String normalizedReference) {
+    String toThumbnailReference(String normalizedReference, int width) {
         String[] parts = normalizedReference.split("/");
         String fileName = parts[1];
         String baseName = StringUtils.stripFilenameExtension(fileName);
-        return parts[0] + "/" + baseName + thumbnailSuffix + WEBP_EXTENSION;
+        return MINIATURES_DIRECTORY + "/" + baseName + "_" + width + "w" + WEBP_EXTENSION;
     }
 
-    String toOriginalReferenceFromThumbnail(String normalizedReference) {
+    Set<String> toOriginalReferencesFromThumbnail(String normalizedReference) {
         String[] parts = normalizedReference.split("/");
-        String fileName = parts[1];
-        String thumbnailToken = thumbnailSuffix + WEBP_EXTENSION;
-        if (!fileName.endsWith(thumbnailToken)) {
-            return null;
+        if (parts.length != 2 || !MINIATURES_DIRECTORY.equals(parts[0])) {
+            return Set.of();
         }
-        String baseName = fileName.substring(0, fileName.length() - thumbnailToken.length());
-        return parts[0] + "/" + baseName + WEBP_EXTENSION;
+
+        String fileName = parts[1];
+        String baseNameWithSuffix = StringUtils.stripFilenameExtension(fileName);
+        java.util.regex.Matcher matcher = DIMENSION_SUFFIX.matcher(baseNameWithSuffix);
+        if (!matcher.find()) {
+            return Set.of();
+        }
+
+        String baseName = baseNameWithSuffix.substring(0, matcher.start());
+        return allowedDirectories.stream()
+                .filter(directory -> !MINIATURES_DIRECTORY.equals(directory))
+                .map(directory -> directory + "/" + baseName + WEBP_EXTENSION)
+                .collect(Collectors.toSet());
     }
 
-    boolean isGeneratedThumbnail(String fileName) {
-        return fileName.toLowerCase(Locale.ROOT)
-                .endsWith((thumbnailSuffix + WEBP_EXTENSION).toLowerCase(Locale.ROOT));
+    boolean isGeneratedThumbnail(String carpeta, String fileName) {
+        if (MINIATURES_DIRECTORY.equals(carpeta)) {
+            return true;
+        }
+
+        String baseName = StringUtils.stripFilenameExtension(fileName);
+        return DIMENSION_SUFFIX.matcher(baseName).find();
     }
 
     private String normalizeDirectoryToken(String raw) {

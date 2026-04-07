@@ -35,7 +35,8 @@ class FileSystemStorageServiceTest {
 
         assertEquals("paquetes/banner.webp", referencia);
         assertTrue(Files.exists(tempDir.resolve("paquetes/banner.webp")));
-        assertTrue(Files.exists(tempDir.resolve("paquetes/banner_thumb.webp")));
+        assertTrue(Files.exists(tempDir.resolve("miniaturas/banner_480w.webp")));
+        assertTrue(Files.exists(tempDir.resolve("miniaturas/banner_960w.webp")));
     }
 
     @Test
@@ -61,7 +62,8 @@ class FileSystemStorageServiceTest {
 
         assertEquals("paquetes/hero.webp", referencia);
         assertTrue(Files.exists(tempDir.resolve("paquetes/hero.webp")));
-        assertTrue(Files.exists(tempDir.resolve("paquetes/hero_thumb.webp")));
+        assertTrue(Files.exists(tempDir.resolve("miniaturas/hero_480w.webp")));
+        assertTrue(Files.exists(tempDir.resolve("miniaturas/hero_960w.webp")));
     }
 
     @Test
@@ -76,7 +78,7 @@ class FileSystemStorageServiceTest {
 
         List<StorageFileInfo> todos = service.listar(null, null);
         assertEquals(3, todos.size());
-        assertTrue(todos.stream().noneMatch(i -> i.nombre().contains("_thumb")));
+        assertTrue(todos.stream().noneMatch(i -> i.carpeta().equals("miniaturas")));
 
         List<StorageFileInfo> soloPaquetes = service.listar("paquetes", null);
         assertEquals(2, soloPaquetes.size());
@@ -108,11 +110,8 @@ class FileSystemStorageServiceTest {
         StorageProperties properties = new StorageProperties(
                 tempDir.toString(),
                 4_000_000,
-                List.of("paquetes", "iconos", "landing"),
-                quality,
-                480,
-                320,
-                "_thumb"
+                List.of("paquetes", "iconos", "landing", "miniaturas"),
+                quality
         );
         return new FileSystemStorageService(properties);
     }

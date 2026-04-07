@@ -60,7 +60,8 @@ storage:
   location: ${STORAGE_LOCATION:/app/images}
   # 5 MB por defecto
   max-file-size-bytes: 4000000
-  allowed-directories: ${STORAGE_ALLOWED_DIRECTORIES:paquetes,iconos,landing}
+  allowed-directories: paquetes,iconos,landing,miniaturas
+  webp-quality: ${STORAGE_WEBP_QUALITY:90}
   public-base-url: ${STORAGE_PUBLIC_BASE_URL:http://localhost/images}
 
 payments:
