@@ -97,6 +97,7 @@ docker build -t agencia-frontend .
 - `backdeploy.yml`: build/push de imagen backend cuando hay cambios en `back/**`.
 - `frontdeploy.yml`: build/push de imagen frontend cuando hay cambios en `front/**`.
 - Ambas pipelines publican en GHCR.
+- Accedemos al panel de dokploy mediante proxy tunel de cloudflare para no exponer puerto 3000
 
 ## Convenciones de trabajo en este monorepo
 
