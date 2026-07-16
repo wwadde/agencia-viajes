@@ -48,7 +48,7 @@ server {
     location ~ ^/api/auth/(login|register)$ {
         limit_req zone=auth_limit burst=5 nodelay;
 
-        proxy_pass http://fullstack-baken-t8b9t3:8080;
+        proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -61,7 +61,7 @@ server {
     location /api/ {
         limit_req zone=api_limit burst=10 nodelay;
 
-        proxy_pass http://fullstack-baken-t8b9t3:8080;
+        proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -72,7 +72,7 @@ server {
 
     # Endpoints OAuth2 de Spring Security (inicio y callback del proveedor)
     location /oauth2/ {
-        proxy_pass http://fullstack-baken-t8b9t3:8080;
+        proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -82,7 +82,7 @@ server {
     }
 
     location /login/oauth2/ {
-        proxy_pass http://fullstack-baken-t8b9t3:8080;
+        proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
