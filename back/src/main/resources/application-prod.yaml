@@ -2,6 +2,13 @@ spring:
   jpa:
     show-sql: false
 
+  security:
+  oauth2:
+    client:
+      registration:
+        google:
+          redirect-uri: "https://agencia.williamwadde.work/login/oauth2/code/google"
+
 server:
   servlet:
     session:
