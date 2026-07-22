@@ -36,7 +36,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PagoService {
 
     private static final Set<PagoEstado> ESTADOS_ACTIVOS = Set.of(PagoEstado.PENDIENTE, PagoEstado.REQUIERE_ACCION);

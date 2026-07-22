@@ -47,7 +47,6 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ForoService {
 
     private static final Pattern NON_ALNUM = Pattern.compile("[^a-z0-9]+");
@@ -63,7 +62,8 @@ public class ForoService {
     @Value("${storage.public-base-url:}")
     private String storagePublicBaseUrl;
 
-        public ForoPostPageDTO listarPublicos(String query, Integer page, Integer size, Long usuarioId) {
+    @Transactional(readOnly = true)
+    public ForoPostPageDTO listarPublicos(String query, Integer page, Integer size, Long usuarioId) {
         int currentPage = page == null ? 0 : Math.max(page, 0);
         int pageSize = size == null ? 9 : Math.min(Math.max(size, 1), 30);
         String normalizedQuery = query == null ? null : query.trim();
@@ -72,12 +72,12 @@ public class ForoService {
         }
 
         PageRequest pageable = PageRequest.of(
-            currentPage,
-            pageSize,
-            Sort.by(
-                Sort.Order.desc("fechaPublicacion"),
-                Sort.Order.desc("ultimaModificacion")
-            )
+                currentPage,
+                pageSize,
+                Sort.by(
+                        Sort.Order.desc("fechaPublicacion"),
+                        Sort.Order.desc("ultimaModificacion")
+                )
         );
 
         Page<ForoPost> result = foroPostRepository.findPublicByQuery(normalizedQuery, pageable);
@@ -88,27 +88,27 @@ public class ForoService {
         Set<Long> likedPostIds = resolveLikedPostIds(posts, usuarioId);
 
         List<ForoPostResumenDTO> items = posts.stream()
-            .map(post -> toResumen(
-                post,
-                commentsByPostId.getOrDefault(post.getId(), 0L),
-                postLikes.getOrDefault(post.getId(), 0L),
-                likedPostIds.contains(post.getId()),
-                true
-            ))
-            .toList();
+                .map(post -> toResumen(
+                        post,
+                        commentsByPostId.getOrDefault(post.getId(), 0L),
+                        postLikes.getOrDefault(post.getId(), 0L),
+                        likedPostIds.contains(post.getId()),
+                        true
+                ))
+                .toList();
 
         return new ForoPostPageDTO(
-            items,
-            currentPage,
-            pageSize,
-            result.getTotalElements(),
-            result.getTotalPages(),
-            result.hasNext(),
-            result.hasPrevious()
+                items,
+                currentPage,
+                pageSize,
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.hasNext(),
+                result.hasPrevious()
         );
     }
 
-        public ForoPostDetalleDTO obtenerPublico(String slug, Long usuarioId) {
+    public ForoPostDetalleDTO obtenerPublico(String slug, Long usuarioId) {
         ForoPost post = getBySlugOrThrow(slug);
         if (!post.isPublicado()) {
             throw new RecursoNoEncontradoException("Publicación no encontrada");
@@ -123,13 +123,13 @@ public class ForoService {
         Map<Long, Long> postLikes = resolvePostLikeTotals(posts);
 
         return posts.stream()
-            .map(post -> toResumen(
-                post,
-                commentsByPostId.getOrDefault(post.getId(), 0L),
-                postLikes.getOrDefault(post.getId(), 0L),
-                false,
-                false
-            ))
+                .map(post -> toResumen(
+                        post,
+                        commentsByPostId.getOrDefault(post.getId(), 0L),
+                        postLikes.getOrDefault(post.getId(), 0L),
+                        false,
+                        false
+                ))
                 .toList();
     }
 
@@ -137,7 +137,6 @@ public class ForoService {
         return toDetalle(getByIdOrThrow(id), false, true, null);
     }
 
-    @Transactional
     public Long crear(ForoPostUpsertDTO dto, Long autorId) {
         Usuario autor = usuarioRepository.findById(autorId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + autorId));
@@ -154,7 +153,6 @@ public class ForoService {
         foroPostRepository.save(post);
     }
 
-    @Transactional
     public void eliminar(Long id) {
         foroPostRepository.delete(getByIdOrThrow(id));
     }
@@ -338,13 +336,13 @@ public class ForoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Post no encontrado con slug: " + normalizedSlug));
     }
 
-        private ForoPostResumenDTO toResumen(
+    private ForoPostResumenDTO toResumen(
             ForoPost post,
             Long totalComentarios,
             Long totalLikes,
             boolean likedByMe,
             boolean mapPublicImageUrl
-        ) {
+    ) {
         String imagenPortada = post.getBloques().stream()
                 .filter(b -> b.getTipo() == ForoBloqueTipo.IMAGEN)
                 .min(Comparator.comparing(b -> b.getOrden() == null ? Integer.MAX_VALUE : b.getOrden()))
@@ -365,30 +363,30 @@ public class ForoService {
         );
     }
 
-            private ForoPostDetalleDTO toDetalle(ForoPost post, boolean mapPublicImageUrl, boolean includeHiddenComments, Long usuarioId) {
+    private ForoPostDetalleDTO toDetalle(ForoPost post, boolean mapPublicImageUrl, boolean includeHiddenComments, Long usuarioId) {
         List<ForoBloqueDTO> bloques = post.getBloques().stream()
                 .sorted(Comparator.comparing(b -> b.getOrden() == null ? Integer.MAX_VALUE : b.getOrden()))
                 .map(block -> toBloqueDTO(block, mapPublicImageUrl))
                 .toList();
 
-            List<ForoComentario> comentarioEntities = includeHiddenComments
+        List<ForoComentario> comentarioEntities = includeHiddenComments
                 ? foroComentarioRepository.findByPostIdOrderByFechaCreacionAscIdAsc(post.getId())
                 : foroComentarioRepository.findByPostIdAndOcultoFalseOrderByFechaCreacionAscIdAsc(post.getId());
 
-            Map<Long, Long> commentLikes = resolveCommentLikeTotals(comentarioEntities);
-            Set<Long> likedCommentIds = resolveLikedCommentIds(comentarioEntities, usuarioId);
+        Map<Long, Long> commentLikes = resolveCommentLikeTotals(comentarioEntities);
+        Set<Long> likedCommentIds = resolveLikedCommentIds(comentarioEntities, usuarioId);
 
         List<ForoComentarioDTO> comentarios = comentarioEntities.stream()
                 .map(c -> toComentarioDTO(
-                    c,
-                    commentLikes.getOrDefault(c.getId(), 0L),
-                    likedCommentIds.contains(c.getId())
+                        c,
+                        commentLikes.getOrDefault(c.getId(), 0L),
+                        likedCommentIds.contains(c.getId())
                 ))
                 .toList();
 
-            Long totalLikes = foroPostReaccionRepository.countByPostId(post.getId());
-            boolean likedByMe = usuarioId != null
-                && !resolveLikedPostIds(List.of(post), usuarioId).isEmpty();
+        Long totalLikes = foroPostReaccionRepository.countByPostId(post.getId());
+        boolean likedByMe = usuarioId != null
+                            && !resolveLikedPostIds(List.of(post), usuarioId).isEmpty();
 
         return new ForoPostDetalleDTO(
                 post.getId(),

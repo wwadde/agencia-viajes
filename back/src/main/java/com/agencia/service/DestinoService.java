@@ -14,7 +14,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class DestinoService {
 
     private final DestinoRepository destinoRepository;
@@ -32,7 +31,6 @@ public class DestinoService {
         return toDTO(getByIdOrThrow(id));
     }
 
-    @Transactional
     public Long crear(DestinoUpsertDTO dto) {
         Destino destino = Destino.builder().build();
         apply(destino, dto);
@@ -46,7 +44,6 @@ public class DestinoService {
         destinoRepository.save(destino);
     }
 
-    @Transactional
     public void eliminar(Long id) {
         destinoRepository.delete(getByIdOrThrow(id));
     }

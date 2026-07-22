@@ -16,7 +16,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AgendaService {
 
     private final SalidaRepository salidaRepository;
@@ -59,7 +58,6 @@ public class AgendaService {
         salidaRepository.save(salida);
     }
 
-    @Transactional
     public void eliminar(Long id) {
         salidaRepository.delete(getByIdOrThrow(id));
     }

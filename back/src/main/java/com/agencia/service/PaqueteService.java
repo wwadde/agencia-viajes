@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PaqueteService {
 
     private static final Pattern NON_ALNUM = Pattern.compile("[^a-z0-9]+");
@@ -98,7 +97,6 @@ public class PaqueteService {
         paqueteRepository.save(paquete);
     }
 
-    @Transactional
     public void eliminar(Long id) {
         paqueteRepository.delete(getByIdOrThrow(id));
     }
