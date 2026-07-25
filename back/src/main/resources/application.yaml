@@ -41,6 +41,13 @@ spring:
       max-request-size: 4MB
       enabled: true
 
+  ai:
+    openai:
+      base-url: https://openrouter.ai/api/v1
+      api-key: ${OPENROUTER_KEY}
+      chat:
+        temperature: 0.7
+        model: openrouter/auto
 
 
 server:
@@ -89,6 +96,8 @@ payments:
 app:
   auth:
     google:
-      success-path: ${GOOGLE_LOGIN_SUCCESS_PATH:/auth/google/callback}
-      failure-path: ${GOOGLE_LOGIN_FAILURE_PATH:/auth/google/callback}
+      success-path: /auth/google/callback
+      failure-path: /auth/google/callback
+
+
 

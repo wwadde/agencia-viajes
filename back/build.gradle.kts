@@ -24,6 +24,8 @@ repositories {
 	mavenCentral()
 }
 
+extra["springAiVersion"] = "2.0.0"
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
@@ -36,6 +38,10 @@ dependencies {
 	implementation("org.mapstruct:mapstruct:1.6.3")
 	implementation("com.sksamuel.scrimage:scrimage-core:4.3.10")
 	implementation("com.sksamuel.scrimage:scrimage-webp:4.3.10")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.springframework.boot:spring-boot-starter-restclient")
+	implementation("org.springframework.ai:spring-ai-starter-model-openai")
+
 
 	compileOnly("org.projectlombok:lombok")
 	"developmentOnly"("org.springframework.boot:spring-boot-devtools")
@@ -50,8 +56,17 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-security-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-websocket-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-restclient-test")
+
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+	}
 }
 
 tasks.withType<Test> {
