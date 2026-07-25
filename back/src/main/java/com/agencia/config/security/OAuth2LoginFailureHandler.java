@@ -17,7 +17,7 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    @Value("${app.auth.google.failure-path:/auth/google/callback}")
+    @Value("${app.auth.google.failure-path}")
     private String failurePath;
 
     @Override

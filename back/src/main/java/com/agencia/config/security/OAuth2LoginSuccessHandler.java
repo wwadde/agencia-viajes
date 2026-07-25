@@ -30,7 +30,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    @Value("${app.auth.google.success-path:/auth/google/callback}")
+    @Value("${app.auth.google.success-path}")
     private String successPath;
 
     @Override
