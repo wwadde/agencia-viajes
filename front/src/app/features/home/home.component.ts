@@ -7,11 +7,12 @@ import { Router } from '@angular/router';
 import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
 import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pipe';
 import { HomeService } from '../../core/services/home.service';
+import { ChatComponent } from '../chat/chat.component';
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, NgOptimizedImage, ImagenUrlPipe, ImagenMobileSrcsetPipe, DatePipe],
+  imports: [RouterLink, NgOptimizedImage, ImagenUrlPipe, ImagenMobileSrcsetPipe, DatePipe, ChatComponent],
   template: `
     <div class="theme-landing min-h-screen text-stone-900 flex flex-col">
       <!-- Navbar -->
@@ -317,6 +318,8 @@ import { HomeService } from '../../core/services/home.service';
           </div>
         </div>
       </section>
+
+      <app-chat></app-chat>
 
       <!-- Floating WhatsApp -->
       <a
