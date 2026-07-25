@@ -9,18 +9,18 @@ springdoc:
       enabled: true
   api-docs:
     path: /api-docs
-#logging:
-#  level:
-#    org.hibernate.SQL: DEBUG
-#    com.zaxxer.hikari: DEBUG
 
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+#    com.zaxxer.hikari: DEBUG
+    com.agencia: DEBUG
 app:
   frontend:
     url: http://localhost:4200
   cors:
     allowed-origins: http://localhost:4200
 
-# ─── Almacenamiento (dev) ─────────────────────────────────────────────────────
 storage:
   location: ${java.io.tmpdir}/agencia-images
   public-base-url: http://localhost:8080/images
