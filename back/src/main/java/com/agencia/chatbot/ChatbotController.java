@@ -10,13 +10,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api/chatbot")
 @RequiredArgsConstructor
 public class ChatbotController {
 
     private final ChatbotService chatService;
 
-    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chat(@RequestBody ChatRequest request,
                            @AuthenticationPrincipal Usuario usuario) {
 
