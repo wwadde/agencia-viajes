@@ -9,6 +9,7 @@ export interface ChatMessage {
   content: string;
 }
 
+
 export interface ChatEvent {
   type: string;
   data: string;

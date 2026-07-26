@@ -13,6 +13,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
@@ -45,8 +46,8 @@ public class ChatbotServiceImpl implements ChatbotService {
             No inventes información. Si no conoces un dato o no estás seguro, indícalo claramente.
             
             Responde de forma clara, amable y concisa. Utiliza listas cuando mejoren la legibilidad.
-            Prioriza respuestas cortas.
             No finalices todas las respuestas con una pregunta. Hazlo únicamente cuando aporte valor para continuar la conversación.
+            * Sé breve en las respuestas.
             """;
 
 
@@ -63,11 +64,24 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         log.info("Iniciando chat con usuario {}", usuario.getUsuario());
 
-        // Implementar contexto de app
+        // TODO Implementar contexto de app
 
         Conversacion conversacion = obtenerOCrearConversacion(request, usuario);
+        AtomicBoolean errorSistema = new AtomicBoolean(false);
 
         SseEmitter emitter = new SseEmitter(180_000L);
+
+        try {
+
+            emitter.send(
+                    SseEmitter.event()
+                            .name("conversationId")
+                            .data(conversacion.getId())
+            );
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+            return emitter;
+        }
 
         StringBuilder respuestaCompleta = new StringBuilder();
 
@@ -101,6 +115,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                         },
                         error -> {
                             log.error("Error durante el streaming", error);
+                            errorSistema.set(true);
 
                             try {
                                 emitter.send(
@@ -119,7 +134,12 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         emitter.onCompletion(disposable::dispose);
         emitter.onTimeout(disposable::dispose);
-        emitter.onError(e -> disposable.dispose());
+        emitter.onError(_ -> disposable.dispose());
+
+        if (errorSistema.get()) {
+            guardarChatService.guardarRespuestas(respuestaCompleta.toString(), request.peticion(), conversacion, true);
+        }
+
 
         return emitter;
     }
@@ -149,12 +169,7 @@ public class ChatbotServiceImpl implements ChatbotService {
             String pregunta,
             String respuesta) {
 
-        Mono.fromRunnable(() ->
-                        guardarChatService.guardarRespuestas(
-                                respuesta,
-                                pregunta,
-                                conversacion
-                        ))
+        Mono.fromRunnable(() -> guardarChatService.guardarRespuestas(respuesta, pregunta, conversacion, false))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(
                         null,

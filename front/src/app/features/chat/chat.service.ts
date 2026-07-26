@@ -26,7 +26,7 @@ export class ChatService {
 
       fetch(`${environment.apiUrl}/chatbot`, {
         method: 'POST',
-        credentials: 'include',          // ← cookies de sesión
+        credentials: 'include',
         signal: controller.signal,
         headers,
         body: JSON.stringify(request)

@@ -6,6 +6,7 @@ package com.agencia.chatbot;
 public enum RolMensaje {
 
     USUARIO,
-    CHATBOT
+    CHATBOT,
+    SYSTEM
 
 }

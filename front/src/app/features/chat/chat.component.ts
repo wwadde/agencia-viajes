@@ -30,7 +30,7 @@ export class ChatComponent implements OnDestroy {
 
   prompt = '';
 
-  conversationId: number | null = null;
+  conversationId = Number(sessionStorage.getItem('conversationId') ?? '') || null;
 
   messages = signal<ChatMessage[]>([]);
 
@@ -81,20 +81,27 @@ export class ChatComponent implements OnDestroy {
 
         next: event => {
 
-          if (event.type === 'error') {
-            this.pendingTokens.length = 0;
-            this.updateLastMessage(event.data);
-            this.loading.set(false);
-            return;
+          switch (event.type) {
+
+            case 'conversationId':
+              this.conversationId = Number(event.data);
+              sessionStorage.setItem('conversationId', event.data);
+              return;
+
+            case 'message':
+              this.pendingTokens.push(event.data);
+              this.startTyping();
+              return;
+
+            case 'error':
+              this.pendingTokens.length = 0;
+              this.updateLastMessage(event.data);
+              this.loading.set(false);
+              return;
+
+            default:
+              return;
           }
-
-          if (event.type !== 'message') {
-            return;
-          }
-
-          this.pendingTokens.push(event.data);
-
-          this.startTyping();
 
         },
 

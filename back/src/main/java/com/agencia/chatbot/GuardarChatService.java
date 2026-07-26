@@ -48,9 +48,7 @@ public class GuardarChatService {
 //    }
 
     @Transactional
-    public void guardarRespuestas(String respuesta,
-                                  String peticion,
-                                  Conversacion conversacion) {
+    public void guardarRespuestas(String respuesta, String peticion, Conversacion conversacion, boolean error) {
 
         long inicio = System.nanoTime();
 
@@ -66,7 +64,7 @@ public class GuardarChatService {
         MensajeChat mensajeSistema = MensajeChat.builder()
                 .mensaje(respuesta)
                 .fechaHora(fecha)
-                .rolMensaje(RolMensaje.CHATBOT)
+                .rolMensaje(error ? RolMensaje.SYSTEM : RolMensaje.CHATBOT)
                 .conversacion(conversacion)
                 .build();
 
