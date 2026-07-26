@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject, signal, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -21,6 +21,9 @@ export class ChatComponent implements OnDestroy, OnInit {
 
   readonly authenticated = this.authService.isAuthenticated;
 
+  @ViewChild('messagesContainer')
+  private messagesContainer?: ElementRef<HTMLDivElement>;
+
   private readonly pendingTokens: string[] = [];
   private typingInterval: number | null = null;
   private streamCompleted = false;
@@ -36,6 +39,7 @@ export class ChatComponent implements OnDestroy, OnInit {
 
   toggle(): void {
     this.open.update(value => !value);
+    requestAnimationFrame(() => this.scrollToBottom());
   }
 
   send(): void {
@@ -67,6 +71,8 @@ export class ChatComponent implements OnDestroy, OnInit {
         content: ''
       }
     ]);
+
+    this.scrollToBottom();
 
     this.prompt = '';
 
@@ -137,7 +143,7 @@ export class ChatComponent implements OnDestroy, OnInit {
 
     this.typingInterval = window.setInterval(() => {
 
-      const chunk = this.pendingTokens.splice(0, 2).join('');
+      const chunk = this.pendingTokens.shift();
 
       if (chunk) {
 
@@ -156,6 +162,8 @@ export class ChatComponent implements OnDestroy, OnInit {
 
         });
 
+        this.scrollToBottom();
+
       }
 
       if (this.streamCompleted && this.pendingTokens.length === 0) {
@@ -169,7 +177,7 @@ export class ChatComponent implements OnDestroy, OnInit {
 
       }
 
-    }, 100); // modifica el intervalo
+    }, 50); // modifica el intervalo
 
   }
 
@@ -185,6 +193,22 @@ export class ChatComponent implements OnDestroy, OnInit {
       };
 
       return copy;
+
+    });
+
+  }
+
+  private scrollToBottom(): void {
+
+    requestAnimationFrame(() => {
+
+      const container = this.messagesContainer?.nativeElement;
+
+      if (!container) {
+        return;
+      }
+
+      container.scrollTop = container.scrollHeight;
 
     });
 
@@ -217,6 +241,8 @@ export class ChatComponent implements OnDestroy, OnInit {
               content: mensaje.mensaje
             }))
           );
+
+          this.scrollToBottom();
 
         },
 
