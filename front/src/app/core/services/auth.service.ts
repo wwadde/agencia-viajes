@@ -182,6 +182,7 @@ export class AuthService {
             this.lastAuthCheckAt = Date.now();
             this._error.set(null);
             this._loading.set(false);
+            sessionStorage.removeItem('conversationId');
         }
     }
 

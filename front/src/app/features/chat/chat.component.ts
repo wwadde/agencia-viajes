@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnDestroy, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -13,7 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.css'
 })
-export class ChatComponent implements OnDestroy {
+export class ChatComponent implements OnDestroy, OnInit {
 
   private readonly chat = inject(ChatService);
   private readonly destroyRef = inject(DestroyRef);
@@ -195,6 +195,41 @@ export class ChatComponent implements OnDestroy {
     if (this.typingInterval !== null) {
       clearInterval(this.typingInterval);
     }
+
+  }
+
+  ngOnInit(): void {
+
+    if (!this.conversationId) {
+      return;
+    }
+
+    this.chat.getConversation(this.conversationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: conversacion => {
+
+          this.messages.set(
+            conversacion.mensajes.map(mensaje => ({
+              id: mensaje.id,
+              role: mensaje.rolMensaje,
+              content: mensaje.mensaje
+            }))
+          );
+
+        },
+
+        error: error => {
+
+          console.error(error);
+
+          sessionStorage.removeItem('conversationId');
+          this.conversationId = null;
+
+        }
+
+      });
 
   }
 

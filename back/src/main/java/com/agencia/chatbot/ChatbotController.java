@@ -23,6 +23,12 @@ public class ChatbotController {
         return chatService.chat(request, usuario);
     }
 
+    @GetMapping("/conversaciones/{id}")
+    public ConversacionDTO getConversation(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        return chatService.getConversation(id, usuario);
+    }
+
+
 }
 
 

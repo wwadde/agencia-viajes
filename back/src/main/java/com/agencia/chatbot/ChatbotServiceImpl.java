@@ -1,6 +1,7 @@
 package com.agencia.chatbot;
 
 import com.agencia.domain.Usuario;
+import com.agencia.exception.ConversacionException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,6 +23,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final ChatClient chatClient;
     private final ConversacionRepository conversacionRepository;
     private final GuardarChatService guardarChatService;
+    private final ConversacionMapper conversacionMapper;
 
 
     private static final String SYSTEM_PROMPT = """
@@ -51,12 +53,16 @@ public class ChatbotServiceImpl implements ChatbotService {
             """;
 
 
-    public ChatbotServiceImpl(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, ConversacionRepository conversacionRepository, GuardarChatService guardarChatService) {
+    public ChatbotServiceImpl(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory,
+                              ConversacionRepository conversacionRepository,
+                              GuardarChatService guardarChatService,
+                              ConversacionMapper conversacionMapper) {
         this.chatClient = chatClientBuilder.defaultSystem(SYSTEM_PROMPT)
 //                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
         this.conversacionRepository = conversacionRepository;
         this.guardarChatService = guardarChatService;
+        this.conversacionMapper = conversacionMapper;
     }
 
     @Override
@@ -142,6 +148,15 @@ public class ChatbotServiceImpl implements ChatbotService {
 
 
         return emitter;
+    }
+
+    @Override
+    public ConversacionDTO getConversation(Long id, Usuario usuario) {
+        Conversacion conversacion = conversacionRepository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new ConversacionException("Conversación " + id + " no encontrada"));
+
+        // TODO verificar si el formato de las fechas es correcto, cual se usa generalmente UTC, GMT-5 etc...
+        return conversacionMapper.toResponse(conversacion);
     }
 
 

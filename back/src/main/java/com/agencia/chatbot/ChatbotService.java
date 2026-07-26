@@ -6,4 +6,5 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public interface ChatbotService {
     SseEmitter chat(ChatRequest request, Usuario usuario);
 
+    ConversacionDTO getConversation(Long id, Usuario usuario);
 }

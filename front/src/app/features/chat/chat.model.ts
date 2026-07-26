@@ -4,7 +4,7 @@ export interface ChatRequest {
 }
 
 export interface ChatMessage {
-  id: string;
+  id: number | string;
   role: 'USUARIO' | 'CHATBOT';
   content: string;
 }
@@ -13,4 +13,19 @@ export interface ChatMessage {
 export interface ChatEvent {
   type: string;
   data: string;
+}
+
+export interface ConversacionResponse {
+  id: number;
+  titulo: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+  mensajes: MensajeResponse[];
+}
+
+export interface MensajeResponse {
+  id: number;
+  mensaje: string;
+  rolMensaje: 'USUARIO' | 'CHATBOT';
+  fechaHora: string;
 }

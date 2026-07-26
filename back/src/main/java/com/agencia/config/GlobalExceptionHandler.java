@@ -161,6 +161,13 @@ public class GlobalExceptionHandler {
                 "El recurso al que intenta acceder no existe o no esta disponible", URI_404);
     }
 
+    @ExceptionHandler(ConversacionException.class)
+    public ResponseEntity<ProblemDetail> handleNoResourceFound(ConversacionException ex) {
+        log.warn("Conversación no encontrada: {}", ex.getMessage());
+        return problem(HttpStatus.NOT_FOUND, "Conversación no encontrada",
+                ex.getMessage(), URI_404);
+    }
+
 
 
 
