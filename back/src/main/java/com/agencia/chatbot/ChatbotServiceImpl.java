@@ -49,7 +49,12 @@ public class ChatbotServiceImpl implements ChatbotService {
             
             Responde de forma clara, amable y concisa. Utiliza listas cuando mejoren la legibilidad.
             No finalices todas las respuestas con una pregunta. Hazlo únicamente cuando aporte valor para continuar la conversación.
-            * Sé breve en las respuestas.
+            Responde de forma amable, clara y concia. Sé breve en las respuestas.
+            
+            Cuando sea útil, utiliza listas simples iniciadas con "-".
+            No utilices Markdown.
+            No uses negritas, cursivas, encabezados, tablas ni bloques de código.
+            Utiliza únicamente texto plano y saltos de línea.
             """;
 
 

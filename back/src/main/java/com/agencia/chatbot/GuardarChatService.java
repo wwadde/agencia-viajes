@@ -16,37 +16,6 @@ public class GuardarChatService {
     private final ConversacionRepository conversacionRepository;
     private final MensajeChatRepository mensajeChatRepository;
 
-//    @Transactional
-//    public void guardarRespuestas(String respuesta, String peticion, Conversacion conversacion) {
-//
-//        LocalDateTime fecha = LocalDateTime.now();
-//
-//        MensajeChat mensajeUsuario = MensajeChat.builder()
-//                .mensaje(peticion)
-//                .fechaHora(fecha)
-//                .rolMensaje(RolMensaje.USUARIO)
-//                .conversacion(conversacion)
-//                .build();
-//
-//        MensajeChat mensajeSistema = MensajeChat.builder()
-//                .mensaje(respuesta)
-//                .fechaHora(fecha)
-//                .rolMensaje(RolMensaje.CHATBOT)
-//                .conversacion(conversacion)
-//                .build();
-//
-//        mensajeChatRepository.saveAll(List.of(
-//                mensajeUsuario,
-//                mensajeSistema
-//        ));
-//
-//        log.info("Peticion: {}", peticion);
-//        log.info("Respuesta: {}", respuesta);
-//
-//        conversacion.setFechaActualizacion(fecha);
-//        conversacionRepository.save(conversacion);
-//    }
-
     @Transactional
     public void guardarRespuestas(String respuesta, String peticion, Conversacion conversacion, boolean error) {
 
