@@ -1,9 +1,10 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ChatMessage } from './chat.model';
 import { ChatService } from './chat.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-chat',
@@ -12,10 +13,17 @@ import { ChatService } from './chat.service';
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.css'
 })
-export class ChatComponent {
+export class ChatComponent implements OnDestroy {
 
   private readonly chat = inject(ChatService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
+
+  readonly authenticated = this.authService.isAuthenticated;
+
+  private readonly pendingTokens: string[] = [];
+  private typingInterval: number | null = null;
+  private streamCompleted = false;
 
   open = signal(false);
   loading = signal(false);
@@ -34,6 +42,14 @@ export class ChatComponent {
 
     if (!this.prompt.trim() || this.loading()) {
       return;
+    }
+
+    this.pendingTokens.length = 0;
+    this.streamCompleted = false;
+
+    if (this.typingInterval !== null) {
+      clearInterval(this.typingInterval);
+      this.typingInterval = null;
     }
 
     const question = this.prompt.trim();
@@ -60,14 +76,63 @@ export class ChatComponent {
       peticion: question,
       conversacionId: this.conversationId
     })
-    .pipe(takeUntilDestroyed(this.destroyRef))
-    .subscribe({
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
 
-      next: event => {
+        next: event => {
 
-        if (event.type !== 'message') {
-          return;
+          if (event.type === 'error') {
+            this.pendingTokens.length = 0;
+            this.updateLastMessage(event.data);
+            this.loading.set(false);
+            return;
+          }
+
+          if (event.type !== 'message') {
+            return;
+          }
+
+          this.pendingTokens.push(event.data);
+
+          this.startTyping();
+
+        },
+
+        error: error => {
+
+          console.error(error);
+
+          this.pendingTokens.length = 0;
+
+          this.updateLastMessage(
+            'Lo siento, ha ocurrido un error. Inténtalo nuevamente en unos momentos.'
+          );
+
+          this.loading.set(false);
+
+        },
+
+        complete: () => {
+
+          this.streamCompleted = true;
+
         }
+
+      });
+
+  }
+
+  private startTyping(): void {
+
+    if (this.typingInterval !== null) {
+      return;
+    }
+
+    this.typingInterval = window.setInterval(() => {
+
+      const chunk = this.pendingTokens.splice(0, 2).join('');
+
+      if (chunk) {
 
         this.messages.update(messages => {
 
@@ -77,30 +142,52 @@ export class ChatComponent {
 
           copy[copy.length - 1] = {
             ...last,
-            content: last.content + event.data
+            content: last.content + chunk
           };
 
           return copy;
 
         });
 
-      },
+      }
 
-      error: error => {
+      if (this.streamCompleted && this.pendingTokens.length === 0) {
 
-        console.error(error);
-
-        this.loading.set(false);
-
-      },
-
-      complete: () => {
+        if (this.typingInterval !== null) {
+          clearInterval(this.typingInterval);
+          this.typingInterval = null;
+        }
 
         this.loading.set(false);
 
       }
 
+    }, 100); // modifica el intervalo
+
+  }
+
+  private updateLastMessage(content: string): void {
+
+    this.messages.update(messages => {
+
+      const copy = [...messages];
+
+      copy[copy.length - 1] = {
+        ...copy[copy.length - 1],
+        content
+      };
+
+      return copy;
+
     });
+
+  }
+
+  ngOnDestroy(): void {
+
+    if (this.typingInterval !== null) {
+      clearInterval(this.typingInterval);
+    }
 
   }
 

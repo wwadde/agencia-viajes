@@ -5,6 +5,7 @@ import { UserInfoDTO, LoginDTO, RegistroUsuarioDTO } from '../models/auth.model'
 import { environment } from '../../../environments/environment';
 import type { ProblemDetail } from '../models/error.model';
 
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private readonly baseUrl = `${environment.apiUrl}/auth`;

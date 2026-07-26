@@ -1,8 +1,6 @@
 <!-- Botón flotante -->
 
-<button
-  (click)="toggle()"
-  class="fixed bottom-24 right-6 z-[90]
+<button (click)="toggle()" class="fixed bottom-24 right-6 z-[90]
          flex h-14 w-14 items-center justify-center
          rounded-full
          bg-sky-600
@@ -12,14 +10,13 @@
          hover:-translate-y-1
          hover:bg-sky-700">
 
-  IA
+  <img src="/robot.png" alt="Asistente IA" class="h-14 w-14 rounded-full">
 
 </button>
 
 @if(open()) {
 
-<div
-  class="fixed bottom-40 right-6 z-[90]
+<div class="fixed bottom-40 right-6 z-[90]
          flex h-[600px] w-[380px]
          flex-col overflow-hidden
          rounded-2xl
@@ -29,8 +26,7 @@
 
   <!-- Header -->
 
-  <div
-    class="flex items-center justify-between
+  <div class="flex items-center justify-between
            border-b
            bg-slate-50
            px-4 py-3">
@@ -47,9 +43,7 @@
 
     </div>
 
-    <button
-      (click)="toggle()"
-      class="text-xl text-slate-500 hover:text-black">
+    <button (click)="toggle()" class="text-xl text-slate-500 hover:text-black">
 
       ×
 
@@ -59,50 +53,42 @@
 
   <!-- Mensajes -->
 
-  <div
-    class="flex-1 space-y-4 overflow-y-auto bg-slate-100 p-4">
+  <div class="flex-1 space-y-4 overflow-y-auto bg-slate-100 p-4">
 
     @if(messages().length === 0){
 
-      <div class="text-center text-sm text-slate-500">
+    <div class="text-center text-sm text-slate-500">
 
-        Pregúntame sobre paquetes, reservas, destinos o cualquier duda.
+      Pregúntame sobre paquetes, reservas, destinos o cualquier duda.
 
-      </div>
+    </div>
 
     }
 
     @for(message of messages(); track message.id){
 
-      <div
-        class="flex"
-        [class.justify-end]="message.role === 'USUARIO'"
-        [class.justify-start]="message.role === 'CHATBOT'">
+    <div class="flex" [class.justify-end]="message.role === 'USUARIO'"
+      [class.justify-start]="message.role === 'CHATBOT'">
 
-        <div
-          class="max-w-[80%] rounded-xl px-4 py-3 text-sm shadow"
+      <div class="max-w-[80%] rounded-xl px-4 py-3 text-sm shadow break-words whitespace-pre-wrap"
+        [class.bg-sky-600]="message.role === 'USUARIO'" [class.text-white]="message.role === 'USUARIO'"
+        [class.bg-white]="message.role === 'CHATBOT'" [class.text-slate-800]="message.role === 'CHATBOT'">
 
-          [class.bg-sky-600]="message.role === 'USUARIO'"
-          [class.text-white]="message.role === 'USUARIO'"
-
-          [class.bg-white]="message.role === 'CHATBOT'"
-          [class.text-slate-800]="message.role === 'CHATBOT'">
-
-          {{message.content}}
-
-        </div>
+        {{message.content}}
 
       </div>
+
+    </div>
 
     }
 
     @if(loading()){
 
-      <div class="text-sm italic text-slate-500">
+    <div class="text-sm italic text-slate-500">
 
-        Escribiendo...
+      Escribiendo...
 
-      </div>
+    </div>
 
     }
 
@@ -110,44 +96,33 @@
 
   <!-- Footer -->
 
-  <div
-    class="border-t
+  <div class="border-t
            bg-white
            p-3">
 
+    @if (!authenticated()) {
+
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+      Inicia sesión para conversar con el asistente IA.
+    </div>
+
+    } @else {
+
     <div class="flex gap-2">
 
-      <input
-        [(ngModel)]="prompt"
-        (keyup.enter)="send()"
-        placeholder="Escribe tu mensaje..."
-        class="flex-1 rounded-lg border
-               border-slate-300
-               px-3 py-2
-               outline-none
-               focus:border-sky-600">
+      <input [(ngModel)]="prompt" (keyup.enter)="send()" placeholder="Escribe tu mensaje..."
+        class="flex-1 rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-sky-600">
 
-      <button
-
-        (click)="send()"
-
-        [disabled]="loading()"
-
-        class="rounded-lg
-               bg-sky-600
-               px-4
-               font-medium
-               text-white
-               transition-colors
-               hover:bg-sky-700
-               disabled:cursor-not-allowed
-               disabled:bg-slate-300">
+      <button (click)="send()" [disabled]="loading()"
+        class="rounded-lg bg-sky-600 px-4 font-medium text-white hover:bg-sky-700 disabled:bg-slate-300">
 
         Enviar
 
       </button>
 
     </div>
+
+    }
 
   </div>
 
