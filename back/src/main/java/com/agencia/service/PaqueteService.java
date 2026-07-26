@@ -3,6 +3,7 @@ package com.agencia.service;
 import com.agencia.domain.Destino;
 import com.agencia.domain.ImagenPaquete;
 import com.agencia.domain.Paquete;
+import com.agencia.domain.Salida;
 import com.agencia.domain.dto.DestinoDTO;
 import com.agencia.domain.dto.ImagenPaqueteDTO;
 import com.agencia.domain.dto.ImagenPaqueteUpsertDTO;
@@ -14,6 +15,7 @@ import com.agencia.exception.RecursoNoEncontradoException;
 import com.agencia.exception.ReglaNegocioException;
 import com.agencia.repository.DestinoRepository;
 import com.agencia.repository.PaqueteRepository;
+import com.agencia.repository.SalidaRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +42,7 @@ public class PaqueteService {
 
     private final PaqueteRepository paqueteRepository;
     private final DestinoRepository destinoRepository;
+    private final SalidaRepository salidaRepository;
 
     @Value("${storage.public-base-url:}")
     private String storagePublicBaseUrl;
@@ -51,6 +54,7 @@ public class PaqueteService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public PaqueteDetalleDTO obtenerPublico(String idOrSlug) {
         Paquete paquete = resolvePublico(idOrSlug);
         if (!paquete.isDisponible()) {
@@ -138,9 +142,11 @@ public class PaqueteService {
         Paquete paquete = paqueteRepository.findDetalleBaseBySlug(normalizedSlug)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Paquete no encontrado con slug: " + normalizedSlug));
 
-        Hibernate.initialize(paquete.getSalidas());
+        List<Salida> salidas = salidaRepository.findByPaqueteId(paquete.getId());
+        paquete.setSalidas(salidas);
         return paquete;
     }
+
 
     private Paquete resolvePublico(String idOrSlug) {
         if (idOrSlug == null || idOrSlug.isBlank()) {

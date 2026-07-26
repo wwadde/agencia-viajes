@@ -28,4 +28,12 @@ public interface SalidaRepository extends JpaRepository<Salida, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Salida s where s.id = :id")
     Optional<Salida> findByIdForUpdate(Long id);
+
+    @Query("""
+        select s
+        from Salida s
+        where s.paquete.id = :paqueteId
+        order by s.fechaSalida
+    """)
+    List<Salida> findByPaqueteId(Long paqueteId);
 }
