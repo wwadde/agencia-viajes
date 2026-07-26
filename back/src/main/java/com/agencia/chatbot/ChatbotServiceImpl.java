@@ -7,6 +7,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -23,11 +24,29 @@ public class ChatbotServiceImpl implements ChatbotService {
 
 
     private static final String SYSTEM_PROMPT = """
-            Actúa como un asistente de viajes que responde a las preguntas de los usuarios sobre destinos,
-            paquetes turísticos y recomendaciones de viaje. Proporciona información útil y precisa, y sugiere
-            opciones de viaje según las preferencias del usuario. Si te preguntan de otras cosas no relacionadas
-            a los viajes, responde amablemente que estás especializado en viajes y no puedes ayudar con ese tema.
-            Proporciona respuestas cortas
+            Eres el asistente virtual de una agencia de viajes.
+            
+            Tu función es ayudar exclusivamente con temas relacionados con viajes y turismo.
+            
+            Puedes ayudar con:
+            - Destinos turísticos.
+            - Recomendaciones de lugares para visitar.
+            - Paquetes turísticos.
+            - Hoteles y alojamiento.
+            - Transporte y vuelos.
+            - Itinerarios de viaje.
+            - Requisitos de viaje cuando sean conocidos.
+            - Clima, temporadas y actividades turísticas.
+            - Consejos para viajeros.
+            
+            Si una pregunta no está relacionada con viajes o turismo, responde amablemente que eres un
+            asistente especializado en viajes y no puedes ayudar con ese tema.
+            
+            No inventes información. Si no conoces un dato o no estás seguro, indícalo claramente.
+            
+            Responde de forma clara, amable y concisa. Utiliza listas cuando mejoren la legibilidad.
+            Prioriza respuestas cortas.
+            No finalices todas las respuestas con una pregunta. Hazlo únicamente cuando aporte valor para continuar la conversación.
             """;
 
 
@@ -44,24 +63,28 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         log.info("Iniciando chat con usuario {}", usuario.getUsuario());
 
+        // Implementar contexto de app
+
         Conversacion conversacion = obtenerOCrearConversacion(request, usuario);
 
         SseEmitter emitter = new SseEmitter(180_000L);
 
         StringBuilder respuestaCompleta = new StringBuilder();
 
-        chatClient.prompt()
+        Disposable disposable = chatClient.prompt()
                 .user(request.peticion())
 //              .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversacion.getId().toString()))
                 .stream()
                 .content()
                 .doOnNext(respuestaCompleta::append)
-                .doOnComplete(() -> {
-                    guardarConversacionAsync(
-                            conversacion,
-                            request.peticion(),
-                            respuestaCompleta.toString()
-                    );
+                .doFinally(_ -> {
+                    if (!respuestaCompleta.isEmpty()) {
+                        guardarConversacionAsync(
+                                conversacion,
+                                request.peticion(),
+                                respuestaCompleta.toString()
+                        );
+                    }
                     log.info("Conversación {} finalizada", conversacion.getId());
                 })
                 .subscribe(
@@ -78,10 +101,25 @@ public class ChatbotServiceImpl implements ChatbotService {
                         },
                         error -> {
                             log.error("Error durante el streaming", error);
-                            emitter.completeWithError(error);
+
+                            try {
+                                emitter.send(
+                                        SseEmitter.event()
+                                                .name("error")
+                                                .data("Lo siento, ha ocurrido un error. Inténtalo nuevamente en unos momentos.")
+                                );
+                            } catch (IOException _) {
+                                emitter.completeWithError(error);
+                            }
+
+                            emitter.complete();
                         },
                         emitter::complete
                 );
+
+        emitter.onCompletion(disposable::dispose);
+        emitter.onTimeout(disposable::dispose);
+        emitter.onError(e -> disposable.dispose());
 
         return emitter;
     }
