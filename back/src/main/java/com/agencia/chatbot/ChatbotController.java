@@ -2,6 +2,7 @@ package com.agencia.chatbot;
 
 
 import com.agencia.domain.Usuario;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,7 +18,7 @@ public class ChatbotController {
     private final ChatbotService chatService;
 
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chat(@RequestBody ChatRequest request,
+    public SseEmitter chat(@RequestBody @Valid ChatRequest request,
                            @AuthenticationPrincipal Usuario usuario) {
 
         return chatService.chat(request, usuario);

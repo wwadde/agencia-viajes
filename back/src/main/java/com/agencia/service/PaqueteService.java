@@ -18,6 +18,7 @@ import com.agencia.repository.PaqueteRepository;
 import com.agencia.repository.SalidaRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,7 @@ public class PaqueteService {
     @Value("${storage.public-base-url:}")
     private String storagePublicBaseUrl;
 
+    @Tool(name = "paquetesDisponibles", description = "Devuelve una lista de paquetes turísticos disponibles en la agencia")
     public List<PaqueteResumenDTO> listarPublicos() {
         return paqueteRepository.findByDisponibleTrueOrderByDestacadoDescNombreAsc()
                 .stream()
