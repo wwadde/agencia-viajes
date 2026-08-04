@@ -19,8 +19,6 @@ public class GuardarChatService {
     @Transactional
     public void guardarRespuestas(String respuesta, String peticion, Conversacion conversacion, boolean error) {
 
-        long inicio = System.nanoTime();
-
         LocalDateTime fecha = LocalDateTime.now();
 
         MensajeChat mensajeUsuario = MensajeChat.builder()
@@ -42,19 +40,7 @@ public class GuardarChatService {
                 mensajeSistema
         ));
 
-        log.info("saveAll mensajes: {} ms",
-                (System.nanoTime() - inicio) / 1_000_000);
-
-        long t = System.nanoTime();
-
-        conversacion.setFechaActualizacion(fecha);
-        conversacionRepository.save(conversacion);
-
-        log.info("update conversación: {} ms",
-                (System.nanoTime() - t) / 1_000_000);
-
-        log.info("Guardar conversación total: {} ms",
-                (System.nanoTime() - inicio) / 1_000_000);
+        conversacionRepository.actualizarFecha(conversacion.getId(), fecha);
     }
 
 

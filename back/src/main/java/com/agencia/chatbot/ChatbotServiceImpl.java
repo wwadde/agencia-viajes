@@ -1,6 +1,8 @@
 package com.agencia.chatbot;
 
+import com.agencia.config.ChatMemoryManager;
 import com.agencia.domain.Usuario;
+import com.agencia.exception.ChatbotException;
 import com.agencia.exception.ConversacionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +16,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -26,6 +31,9 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final ConversacionRepository conversacionRepository;
     private final GuardarChatService guardarChatService;
     private final ConversacionMapper conversacionMapper;
+    private final ChatMemoryManager chatMemoryManager;
+
+    private static final int MAX_PREGUNTAS = 5;
 
 
     @Override
@@ -33,16 +41,33 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         log.info("Iniciando chat con usuario {}", usuario.getUsuario());
 
+        // Se limitan los mensajes por día
+        LocalDateTime inicioDia = LocalDate.now(ZoneId.of("America/Bogota")).atStartOfDay();
+        long preguntasDelDia = conversacionRepository.contarMensajesDelDia(usuario.getId(), inicioDia, RolMensaje.USUARIO);
+        if (preguntasDelDia >= MAX_PREGUNTAS) {
+            throw new ChatbotException("Ha alcanzado el límite de (" + MAX_PREGUNTAS + ") preguntas para hoy. Inténtalo nuevamente mañana.");
+        }
+
         Conversacion conversacion = obtenerOCrearConversacion(request, usuario);
         AtomicBoolean errorSistema = new AtomicBoolean(false);
         SseEmitter emitter = new SseEmitter(180_000L);
 
-        // TODO modificar el front para que acepte el conversationId y lo envie en siguientes peticiones
 
-        // Envíar id de la conversacion
+        // Se limitan los mensajes por conversación
+        long preguntasConversacion = conversacionRepository.contarMensajesConversacion(conversacion.getId(), RolMensaje.USUARIO);
+        if (preguntasConversacion >= MAX_PREGUNTAS) {
+            enviarEvento(emitter, "error", "Ha alcanzado el límite de (" + MAX_PREGUNTAS + ") preguntas para esta conversación");
+            emitter.complete();
+            return emitter;
+        }
+
+        // Envíar id de la conversacion, si no puede, retorna el error
         if (!enviarEvento(emitter, "conversationId", conversacion.getId())) {
             return emitter;
         }
+
+        // Si no existe en memoria, se carga la conversacion desde la base de datos y se vuelve a cargar en chatmemory
+        chatMemoryManager.prepararMemoriaConversacion(conversacion.getId());
 
         StringBuilder respuestaCompleta = new StringBuilder();
 
@@ -78,7 +103,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     }
 
     @Override
-    public ConversacionDTO getConversation(Long id, Usuario usuario) {
+    public ConversacionDTO getConversation(UUID id, Usuario usuario) {
         Conversacion conversacion = conversacionRepository.findByIdAndUsuarioId(id, usuario.getId())
                 .orElseThrow(() -> new ConversacionException("Conversación " + id + " no encontrada"));
 

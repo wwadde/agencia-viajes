@@ -2,17 +2,45 @@ package com.agencia.chatbot;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.w3c.dom.stylesheets.LinkStyle;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ConversacionRepository extends JpaRepository<Conversacion, Long> {
 
 
+
     @Query("SELECT c FROM Conversacion c WHERE c.id = :conversacionId AND c.usuario.id = :usuarioId")
-    Optional<Conversacion> conversacionExiste(Long conversacionId, Long usuarioId);
+    Optional<Conversacion> conversacionExiste(UUID conversacionId, Long usuarioId);
 
     @EntityGraph(attributePaths = "mensajes")
-    Optional<Conversacion> findByIdAndUsuarioId(Long id, Long usuarioId);
+    Optional<Conversacion> findByIdAndUsuarioId(UUID id, Long usuarioId);
+
+    @Modifying
+    @Query("UPDATE Conversacion c SET c.fechaActualizacion = :fecha WHERE c.id = :id")
+    void actualizarFecha(UUID id, LocalDateTime fecha);
+
+    @Query("""
+            SELECT count(m)
+            FROM MensajeChat m
+            WHERE m.conversacion.usuario.id = :usuarioId
+            AND m.rolMensaje = :rolMensaje
+            AND m.fechaHora >= :inicio
+            """)
+    long contarMensajesDelDia(Long usuarioId, LocalDateTime inicio, RolMensaje rolMensaje);
+
+    @Query("""
+            SELECT count(m)
+            FROM MensajeChat m
+            WHERE m.conversacion.id = :conversacionId
+            AND m.rolMensaje = :rolMensaje
+            """)
+    long contarMensajesConversacion(UUID conversacionId, RolMensaje rolMensaje);
+
 
 }

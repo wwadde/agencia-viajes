@@ -9,6 +9,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/chatbot")
@@ -25,7 +27,7 @@ public class ChatbotController {
     }
 
     @GetMapping("/conversaciones/{id}")
-    public ConversacionDTO getConversation(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+    public ConversacionDTO getConversation(@PathVariable UUID id, @AuthenticationPrincipal Usuario usuario) {
         return chatService.getConversation(id, usuario);
     }
 

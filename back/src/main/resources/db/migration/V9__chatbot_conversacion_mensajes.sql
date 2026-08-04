@@ -1,6 +1,6 @@
 CREATE TABLE conversaciones
 (
-    id                  BIGSERIAL PRIMARY KEY,
+    id                  UUID PRIMARY KEY,
     usuario_id          BIGINT       NOT NULL,
     titulo              VARCHAR(255) NOT NULL,
     fecha_creacion      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE conversaciones
 CREATE TABLE mensajes_chat
 (
     id              BIGSERIAL PRIMARY KEY,
-    conversacion_id BIGINT      NOT NULL,
+    conversacion_id UUID      NOT NULL,
     mensaje         TEXT        NOT NULL,
     rol_mensaje     VARCHAR(20) NOT NULL,
     fecha_hora      TIMESTAMP WITHOUT TIME ZONE NOT NULL,

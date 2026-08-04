@@ -100,4 +100,5 @@ app:
       failure-path: /auth/google/callback
 
 
-
+# site key: 0x4AAAAAAD-0ZzYNQlHQZEEK
+TURNSTILE_SECRET: ${TURNSTILE_SECRET:0x4AAAAAAD-0Z_ceO660nDqNaYV5ANUOBkI}

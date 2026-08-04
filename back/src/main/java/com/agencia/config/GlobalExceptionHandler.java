@@ -168,6 +168,13 @@ public class GlobalExceptionHandler {
                 ex.getMessage(), URI_404);
     }
 
+    @ExceptionHandler(ChatbotException.class)
+    public ResponseEntity<ProblemDetail> handleChatbotException(ChatbotException ex) {
+        log.warn("Error de chatbot: {}", ex.getMessage());
+        return problem(HttpStatus.FORBIDDEN, "Error chat",
+                ex.getMessage(), URI_403);
+    }
+
 
 
 
