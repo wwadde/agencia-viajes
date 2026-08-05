@@ -4,11 +4,16 @@ package com.agencia.chatbot;
 import com.agencia.domain.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -29,6 +34,14 @@ public class ChatbotController {
     @GetMapping("/conversaciones/{id}")
     public ConversacionDTO getConversation(@PathVariable UUID id, @AuthenticationPrincipal Usuario usuario) {
         return chatService.getConversation(id, usuario);
+    }
+
+    @GetMapping("/conversaciones")
+    public Page<ConversacionDTO> conversaciones(
+            @AuthenticationPrincipal Usuario usuario, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return chatService.getConversaciones(usuario.getId(), page, size);
     }
 
 
