@@ -9,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.Disposable;
@@ -19,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,6 +37,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final GuardarChatService guardarChatService;
     private final ConversacionMapper conversacionMapper;
     private final ChatMemoryManager chatMemoryManager;
+    private static final ZoneId colombiaZoneId = ZoneId.of("America/Bogota");
 
     private static final int MAX_PREGUNTAS = 5;
 
@@ -42,7 +48,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         log.info("Iniciando chat con usuario {}", usuario.getUsuario());
 
         // Se limitan los mensajes por día
-        LocalDateTime inicioDia = LocalDate.now(ZoneId.of("America/Bogota")).atStartOfDay();
+        LocalDateTime inicioDia = LocalDate.now(colombiaZoneId).atStartOfDay();
         long preguntasDelDia = conversacionRepository.contarMensajesDelDia(usuario.getId(), inicioDia, RolMensaje.USUARIO);
         if (preguntasDelDia >= MAX_PREGUNTAS) {
             throw new ChatbotException("Ha alcanzado el límite de (" + MAX_PREGUNTAS + ") preguntas para hoy. Inténtalo nuevamente mañana.");
@@ -62,7 +68,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         }
 
         // Envíar id de la conversacion, si no puede, retorna el error
-        if (!enviarEvento(emitter, "conversationId", conversacion.getId())) {
+        if (!enviarEvento(emitter, "conversationId", conversacion.getId().toString())) {
             return emitter;
         }
 
@@ -110,11 +116,19 @@ public class ChatbotServiceImpl implements ChatbotService {
         return conversacionMapper.toResponse(conversacion);
     }
 
+    @Override
+    public Page<ConversacionDTO> getConversaciones(Long usuarioId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaActualizacion"));
+        return conversacionRepository
+                .findByUsuarioId(usuarioId, pageable)
+                .map(conversacionMapper::toResponseSinMensajes);
+    }
+
 
     private Conversacion obtenerOCrearConversacion(ChatRequest request, Usuario usuario) {
         return conversacionRepository.conversacionExiste(request.conversacionId(), usuario.getId())
                 .orElseGet(() -> {
-                    LocalDateTime fecha = LocalDateTime.now();
+                    LocalDateTime fecha = LocalDateTime.now(colombiaZoneId);
                     return conversacionRepository.save(Conversacion.builder()
                             .titulo(StringUtils.abbreviate(request.peticion(), 60)
                                     .replace("\n", " ")
@@ -137,7 +151,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                 );
     }
 
-    private boolean enviarEvento(SseEmitter emitter, String event, Object data) {
+    private boolean enviarEvento(SseEmitter emitter, String event, String data) {
         try {
             emitter.send(
                     SseEmitter.event()
