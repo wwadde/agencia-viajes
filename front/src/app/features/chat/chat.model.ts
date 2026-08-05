@@ -1,6 +1,6 @@
 export interface ChatRequest {
   peticion: string;
-  conversacionId?: number | null;
+  conversacionId?: string | null;
 }
 
 export interface ChatMessage {
@@ -9,14 +9,20 @@ export interface ChatMessage {
   content: string;
 }
 
-
 export interface ChatEvent {
   type: string;
   data: string;
 }
 
+export interface ConversacionResumen {
+  id: string;
+  titulo: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+}
+
 export interface ConversacionResponse {
-  id: number;
+  id: string;
   titulo: string;
   fechaCreacion: string;
   fechaActualizacion: string;
@@ -28,4 +34,14 @@ export interface MensajeResponse {
   mensaje: string;
   rolMensaje: 'USUARIO' | 'CHATBOT';
   fechaHora: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
 }

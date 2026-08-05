@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ChatEvent, ChatRequest, ConversacionResponse } from './chat.model';
+import { ChatEvent, ChatRequest, ConversacionResponse, ConversacionResumen, PageResponse } from './chat.model';
 import { HttpClient } from '@angular/common/http';
 
 @Injectable({
@@ -11,11 +11,23 @@ export class ChatService {
 
   private readonly http = inject(HttpClient);
 
-    getConversation(id: number): Observable<ConversacionResponse> {
+    getConversation(id: string): Observable<ConversacionResponse> {
     return this.http.get<ConversacionResponse>(
       `${environment.apiUrl}/chatbot/conversaciones/${id}`
     );
   }
+
+  getConversations(page = 0, size = 10) {
+  return this.http.get<PageResponse<ConversacionResumen>>(
+    `${environment.apiUrl}/chatbot/conversaciones`,
+    {
+      params: {
+        page,
+        size
+      }
+    }
+  );
+}
 
   stream(request: ChatRequest): Observable<ChatEvent> {
     return new Observable<ChatEvent>(observer => {
@@ -113,4 +125,7 @@ export class ChatService {
     );
     return matches ? decodeURIComponent(matches[1]) : null;
   }
+
+  
 }
+

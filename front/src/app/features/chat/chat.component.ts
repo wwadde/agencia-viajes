@@ -2,14 +2,15 @@ import { Component, DestroyRef, OnDestroy, OnInit, inject, signal, ElementRef, V
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ChatMessage } from './chat.model';
+import { ChatMessage, ConversacionResumen } from './chat.model';
 import { ChatService } from './chat.service';
 import { AuthService } from '../../core/services/auth.service';
+import { RelativeDatePipe } from '../../core/pipes/relative-dates.pipe';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RelativeDatePipe],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.css'
 })
@@ -29,17 +30,142 @@ export class ChatComponent implements OnDestroy, OnInit {
   private streamCompleted = false;
 
   open = signal(false);
+  closing = signal(false);
   loading = signal(false);
+  showHistory = signal(false);
 
   prompt = '';
 
-  conversationId = Number(sessionStorage.getItem('conversationId') ?? '') || null;
+  conversationId: string | null = sessionStorage.getItem('conversationId');
 
   messages = signal<ChatMessage[]>([]);
+  conversations = signal<ConversacionResumen[]>([]);
+
+  page = 0;
+  lastPage = false;
 
   toggle(): void {
-    this.open.update(value => !value);
+
+    if (!this.open()) {
+
+      this.open.set(true);
+
+      requestAnimationFrame(() => this.scrollToBottom());
+
+      return;
+
+    }
+
+    this.closing.set(true);
+
+    setTimeout(() => {
+
+      this.open.set(false);
+
+      this.closing.set(false);
+
+    }, 220);
+
+  }
+
+  toggleHistory(): void {
+
+    if (!this.showHistory() && this.conversations().length === 0) {
+      this.loadConversations();
+    }
+
+    this.showHistory.update(value => !value);
+
+  }
+
+  selectConversation(id: string): void {
+
+    this.chat.getConversation(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: conversacion => {
+
+          this.conversationId = conversacion.id;
+
+          sessionStorage.setItem(
+            'conversationId',
+            conversacion.id
+          );
+
+          this.messages.set(
+
+            conversacion.mensajes.map(mensaje => ({
+
+              id: mensaje.id,
+
+              role: mensaje.rolMensaje,
+
+              content: mensaje.mensaje
+
+            }))
+
+          );
+
+          this.scrollToBottom();
+
+          this.showHistory.set(false);
+
+        },
+
+        error: console.error
+
+      });
+
+  }
+
+  loadConversations(): void {
+
+    if (this.lastPage) {
+      return;
+    }
+
+    this.chat.getConversations(this.page)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: response => {
+
+          this.conversations.update(list => [
+            ...list,
+            ...response.content
+          ]);
+
+          this.page++;
+
+          this.lastPage = response.last;
+
+        },
+
+        error: console.error
+
+      });
+
+  }
+
+  newConversation(): void {
+
+    this.conversationId = null;
+
+    sessionStorage.removeItem('conversationId');
+
+    this.messages.set([]);
+
+    this.prompt = '';
+
+    this.pendingTokens.length = 0;
+
+    this.loading.set(false);
+
+    this.showHistory.set(false);
+
     requestAnimationFrame(() => this.scrollToBottom());
+
   }
 
   send(): void {
@@ -90,8 +216,12 @@ export class ChatComponent implements OnDestroy, OnInit {
           switch (event.type) {
 
             case 'conversationId':
-              this.conversationId = Number(event.data);
+              this.conversationId = event.data;
               sessionStorage.setItem('conversationId', event.data);
+              this.conversations.set([]);
+              this.page = 0;
+              this.lastPage = false;
+              this.loadConversations();
               return;
 
             case 'message':
