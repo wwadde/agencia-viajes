@@ -243,13 +243,14 @@ export class ChatComponent implements OnDestroy, OnInit {
 
         error: error => {
 
-          console.error(error);
-
           this.pendingTokens.length = 0;
 
-          this.updateLastMessage(
-            'Lo siento, ha ocurrido un error. Inténtalo nuevamente en unos momentos.'
-          );
+          const message =
+            error?.detail ??
+            error?.message ??
+            'Lo siento, ha ocurrido un error. Inténtalo nuevamente en unos momentos.';
+
+          this.updateLastMessage(message);
 
           this.loading.set(false);
 
