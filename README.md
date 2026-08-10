@@ -20,7 +20,33 @@ Monorepo de la aplicacion de agencia de viajes con frontend Angular y backend Sp
 - pnpm 9.1.4
 - Java 25
 - Docker (opcional para contenedores)
-- PostgreSQL 14+
+- PostgreSQL 16+ | extension pgvector
+
+```
+set "PGROOT=C:\Program Files\PostgreSQL\18"
+cd %TEMP%
+git clone --branch v0.8.6 https://github.com/pgvector/pgvector.git
+cd pgvector
+nmake /F Makefile.win
+nmake /F Makefile.win install
+```
+
+Linux
+
+```
+cd /tmp
+git clone --branch v0.8.6 https://github.com/pgvector/pgvector.git
+cd pgvector
+make
+make install # may need sudo
+```
+
+O trayendo la imagen docker
+
+```
+pgvector/pgvector:pg16
+```
+
 
 ## Primer arranque local
 
