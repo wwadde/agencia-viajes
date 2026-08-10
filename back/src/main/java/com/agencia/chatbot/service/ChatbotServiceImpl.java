@@ -1,5 +1,11 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.service;
 
+import com.agencia.chatbot.utils.ConversacionMapper;
+import com.agencia.chatbot.dto.ChatRequest;
+import com.agencia.chatbot.dto.ConversacionDTO;
+import com.agencia.chatbot.entity.Conversacion;
+import com.agencia.chatbot.entity.RolMensaje;
+import com.agencia.chatbot.repository.ConversacionRepository;
 import com.agencia.config.ChatMemoryManager;
 import com.agencia.domain.Usuario;
 import com.agencia.exception.ChatbotException;
@@ -23,7 +29,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 

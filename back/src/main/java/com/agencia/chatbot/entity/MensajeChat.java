@@ -1,4 +1,4 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

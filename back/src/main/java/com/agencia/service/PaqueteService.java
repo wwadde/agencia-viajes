@@ -1,5 +1,6 @@
 package com.agencia.service;
 
+import com.agencia.config.mapper.PaqueteMapper;
 import com.agencia.domain.Destino;
 import com.agencia.domain.ImagenPaquete;
 import com.agencia.domain.Paquete;
@@ -16,14 +17,24 @@ import com.agencia.exception.ReglaNegocioException;
 import com.agencia.repository.DestinoRepository;
 import com.agencia.repository.PaqueteRepository;
 import com.agencia.repository.SalidaRepository;
+import com.agencia.utils.EstadoEventoOutbox;
+import com.agencia.utils.PaqueteSpecification;
+import com.agencia.utils.TipoEntidadOutbox;
+import com.agencia.utils.TipoEventoOutbox;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.text.Normalizer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -44,6 +55,8 @@ public class PaqueteService {
     private final PaqueteRepository paqueteRepository;
     private final DestinoRepository destinoRepository;
     private final SalidaRepository salidaRepository;
+    private final EventoOutboxService eventoOutboxService;
+    private final PaqueteMapper paqueteMapper;
 
     @Value("${storage.public-base-url:}")
     private String storagePublicBaseUrl;
@@ -56,7 +69,6 @@ public class PaqueteService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public PaqueteDetalleDTO obtenerPublico(String idOrSlug) {
         Paquete paquete = resolvePublico(idOrSlug);
         if (!paquete.isDisponible()) {
@@ -83,7 +95,9 @@ public class PaqueteService {
 
         Paquete paquete = Paquete.builder().build();
         applyUpsert(paquete, dto, destino, true);
-        return paqueteRepository.save(paquete).getId();
+        Paquete entidad = paqueteRepository.save(paquete);
+        eventoOutboxService.registrar(TipoEntidadOutbox.PAQUETE, entidad.getId(), TipoEventoOutbox.CREADO);
+        return entidad.getId();
     }
 
     @Transactional
@@ -101,9 +115,12 @@ public class PaqueteService {
         }
 
         paqueteRepository.save(paquete);
+        eventoOutboxService.registrar(TipoEntidadOutbox.PAQUETE, id, TipoEventoOutbox.ACTUALIZADO);
+
     }
 
     public void eliminar(Long id) {
+        eventoOutboxService.registrar(TipoEntidadOutbox.PAQUETE, id, TipoEventoOutbox.ELIMINADO);
         paqueteRepository.delete(getByIdOrThrow(id));
     }
 
@@ -164,7 +181,7 @@ public class PaqueteService {
     }
 
     private PaqueteResumenDTO toResumen(Paquete paquete) {
-        String destino = paquete.getDestino() != null ? paquete.getDestino().getNombre() : null;
+        Destino destino = paquete.getDestino();
         String imagenPrincipal = paquete.getImagenes().stream()
                 .filter(ImagenPaquete::isPrincipal)
                 .min(Comparator.comparing(i -> i.getOrden() == null ? Integer.MAX_VALUE : i.getOrden()))
@@ -180,7 +197,9 @@ public class PaqueteService {
                 paquete.getDescripcion(),
                 paquete.getDuracionDias(),
                 paquete.isDestacado(),
-                destino,
+                destino.getNombre(),
+                destino.getCiudad(),
+                destino.getPais(),
                 imagenPrincipal
         );
     }
@@ -302,6 +321,34 @@ public class PaqueteService {
         }
 
         return slug.length() > 240 ? slug.substring(0, 240) : slug;
+    }
+
+    public List<PaqueteResumenDTO> buscarPaquetes(
+            String destino,
+            String pais,
+            Integer duracionMaxima,
+            BigDecimal presupuestoMaximo,
+            LocalDate fechaSalida,
+            Integer personas
+    ) {
+
+        Specification<Paquete> specification =
+                PaqueteSpecification.buscar(destino, pais, duracionMaxima, presupuestoMaximo, fechaSalida, personas);
+
+        Pageable pageable = PageRequest.of(
+                0,
+                3,
+                Sort.by(
+                        Sort.Order.desc("destacado"),
+                        Sort.Order.asc("nombre")
+                )
+        );
+
+        return paqueteRepository.findAll(specification, pageable)
+                .getContent()
+                .stream()
+                .map(paqueteMapper::toResumenDTO)
+                .toList();
     }
 }
 

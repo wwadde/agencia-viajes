@@ -1,5 +1,7 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.service;
 
+import com.agencia.chatbot.dto.ChatRequest;
+import com.agencia.chatbot.dto.ConversacionDTO;
 import com.agencia.domain.Usuario;
 import org.springframework.data.domain.Page;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;

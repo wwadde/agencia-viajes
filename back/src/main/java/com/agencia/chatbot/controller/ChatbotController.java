@@ -1,19 +1,18 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.controller;
 
 
+import com.agencia.chatbot.dto.ChatRequest;
+import com.agencia.chatbot.dto.ConversacionDTO;
+import com.agencia.chatbot.service.ChatbotService;
 import com.agencia.domain.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.List;
 import java.util.UUID;
 
 

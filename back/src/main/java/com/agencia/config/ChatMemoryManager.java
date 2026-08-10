@@ -1,6 +1,8 @@
 package com.agencia.config;
 
-import com.agencia.chatbot.*;
+import com.agencia.chatbot.entity.MensajeChat;
+import com.agencia.chatbot.entity.RolMensaje;
+import com.agencia.chatbot.repository.MensajeChatRepository;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,13 +31,6 @@ public class ChatMemoryManager {
     public ChatMemoryManager(ChatMemory chatMemory, MensajeChatRepository mensajeChatRepository) {
         this.mensajeChatRepository = mensajeChatRepository;
         this.chatMemory = chatMemory;
-    }
-
-    // Al finalizar el dia
-    @Scheduled(cron = "0 5 0 * * ?")
-    public void limpiarMemoria() {
-        conversacionesActivas.forEach((key, _) -> chatMemory.clear(key));
-        conversacionesActivas.clear();
     }
 
 
@@ -61,7 +57,13 @@ public class ChatMemoryManager {
         // Registra siempre la conversacion activa
         conversacionesActivas.put(conversacionId.toString(), Instant.now());
 
+    }
 
+    public void limpiar() {
+        conversacionesActivas.clear();
+    }
 
+    public Set<String> conversacionesActivas() {
+        return Set.copyOf(conversacionesActivas.keySet());
     }
 }

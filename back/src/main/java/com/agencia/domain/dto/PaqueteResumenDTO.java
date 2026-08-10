@@ -8,6 +8,8 @@ public record PaqueteResumenDTO(
         Integer duracionDias,
         boolean destacado,
         String destino,
+        String ciudad,
+        String pais,
         String imagenPrincipal
 ) {
 }

@@ -4,10 +4,14 @@ import com.agencia.domain.Paquete;
 import com.agencia.domain.Salida;
 import com.agencia.domain.dto.AgendaSalidaDTO;
 import com.agencia.domain.dto.AgendaSalidaUpsertDTO;
+import com.agencia.domain.dto.DisponibilidadDTO;
+import com.agencia.domain.dto.SalidaDTO;
 import com.agencia.exception.RecursoNoEncontradoException;
 import com.agencia.repository.PaqueteRepository;
 import com.agencia.repository.SalidaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,5 +95,77 @@ public class AgendaService {
                 paquete != null ? paquete.getSlug() : null
         );
     }
+
+    public List<SalidaDTO> obtenerProximasSalidas(
+            Long paqueteId,
+            LocalDate desde,
+            Integer personas
+    ) {
+
+        if (desde == null) {
+            desde = LocalDate.now();
+        }
+
+        if (personas == null || personas < 1) {
+            personas = 1;
+        }
+
+        Pageable pageable = PageRequest.of(
+                0,
+                3
+        );
+
+        return salidaRepository.buscarProximasSalidas(paqueteId, desde, personas, pageable)
+                .stream()
+                .map(salida -> new SalidaDTO(
+                        salida.getId(),
+                        salida.getFechaSalida(),
+                        salida.getPrecio(),
+                        salida.getCuposDisponibles()
+                ))
+                .toList();
+    }
+
+    public DisponibilidadDTO verificarDisponibilidad(
+            Long paqueteId,
+            LocalDate fechaSalida,
+            Integer personas
+    ) {
+
+        if (personas == null || personas < 1) {
+            personas = 1;
+        }
+
+        Salida salida = salidaRepository
+                .buscarSalida(paqueteId, fechaSalida)
+                .orElse(null);
+
+        if (salida == null) {
+            return new DisponibilidadDTO(
+                    paqueteId,
+                    null,
+                    fechaSalida,
+                    null,
+                    0,
+                    personas,
+                    false
+            );
+        }
+
+        boolean disponible =
+                salida.getCuposDisponibles() >= personas;
+
+        return new DisponibilidadDTO(
+                paqueteId,
+                salida.getPaquete().getNombre(),
+                salida.getFechaSalida(),
+                salida.getPrecio(),
+                salida.getCuposDisponibles(),
+                personas,
+                disponible
+        );
+    }
+
+
 }
 

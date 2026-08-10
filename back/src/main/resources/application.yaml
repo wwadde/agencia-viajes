@@ -2,6 +2,7 @@ spring:
   application:
     name: agencia
 
+
   profiles:
     active: dev
 
@@ -42,12 +43,26 @@ spring:
       enabled: true
 
   ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: false
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
     openai:
       base-url: https://openrouter.ai/api/v1
       api-key: ${OPENROUTER_KEY}
       chat:
-        temperature: 0.7
+        temperature: 0.4
         model: openrouter/auto
+        #respuesta máxima en tokens
+        max-tokens: 1024
+      embedding:
+        model: openai/text-embedding-3-small
+
+  threads:
+    virtual:
+      enabled: true
 
 
 server:

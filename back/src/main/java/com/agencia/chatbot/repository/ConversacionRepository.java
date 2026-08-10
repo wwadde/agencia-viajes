@@ -1,5 +1,7 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.repository;
 
+import com.agencia.chatbot.entity.Conversacion;
+import com.agencia.chatbot.entity.RolMensaje;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -11,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ConversacionRepository extends JpaRepository<Conversacion, Long> {
+public interface ConversacionRepository extends JpaRepository<Conversacion, UUID> {
 
 
 

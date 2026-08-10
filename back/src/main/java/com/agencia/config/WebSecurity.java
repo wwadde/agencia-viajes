@@ -56,6 +56,7 @@ public class WebSecurity {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
+                        // TODO probar estos endpoints y si vale la pena desactivar csrf
                         .ignoringRequestMatchers(
                                 "/api/pagos/webhook", "/api/pagos/webhook/payu"
                         )
@@ -84,6 +85,7 @@ public class WebSecurity {
                         .requestMatchers("/api/contenidos/**").permitAll()
                         .requestMatchers("/api/agendas/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )

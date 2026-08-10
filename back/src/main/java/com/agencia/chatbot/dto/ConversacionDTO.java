@@ -1,4 +1,4 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

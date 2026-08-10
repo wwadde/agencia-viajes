@@ -1,4 +1,4 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.entity;
 
 /**
  * Especifica de quien proviene el mensaje del chatbot

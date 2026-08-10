@@ -3,13 +3,16 @@ package com.agencia.repository;
 import com.agencia.domain.Paquete;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface PaqueteRepository extends JpaRepository<Paquete, Long> {
+public interface PaqueteRepository extends JpaRepository<Paquete, Long>, JpaSpecificationExecutor<Paquete> {
+
+    Optional<Paquete> findByNombre(String nombre);
 
     interface PaqueteSitemapProjection {
         String getSlug();
@@ -60,5 +63,11 @@ public interface PaqueteRepository extends JpaRepository<Paquete, Long> {
             where p.slug = :slug
             """)
     Optional<Paquete> findDetalleBaseBySlug(@Param("slug") String slug);
+
+    @EntityGraph(attributePaths = {"destino"})
+    @Query("""
+        SELECT p FROM Paquete p WHERE p.id = :id
+        """)
+    Optional<Paquete> encontrarPaqueteConDestino(Long id);
 }
 

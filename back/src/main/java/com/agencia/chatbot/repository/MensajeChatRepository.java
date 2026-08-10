@@ -1,5 +1,6 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.repository;
 
+import com.agencia.chatbot.entity.MensajeChat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

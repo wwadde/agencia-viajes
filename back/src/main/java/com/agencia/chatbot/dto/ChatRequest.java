@@ -1,4 +1,4 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

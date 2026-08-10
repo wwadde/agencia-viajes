@@ -12,7 +12,6 @@ public class SecurityBeansConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Cost factor 12: estandar recomendado para produccion.
         return new BCryptPasswordEncoder(12);
     }
 
