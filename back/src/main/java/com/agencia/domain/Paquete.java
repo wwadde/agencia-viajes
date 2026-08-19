@@ -42,7 +42,7 @@ public class Paquete {
     private LocalDateTime ultimaModificacion;
 
     @Builder.Default
-    @OneToMany(mappedBy = "paquete", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "paquete")
     private List<ImagenPaquete> imagenes = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,6 +50,6 @@ public class Paquete {
     private Destino destino;
 
     @Builder.Default
-    @OneToMany(mappedBy = "paquete", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "paquete")
     private List<Salida> salidas = new ArrayList<>();
 }

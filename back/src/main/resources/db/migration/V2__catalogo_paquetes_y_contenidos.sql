@@ -1,4 +1,4 @@
--- V3__catalogo_paquetes_y_contenidos.sql
+-- V2__catalogo_paquetes_y_contenidos.sql
 -- Estructura de catalogo para agencia de viajes: destinos, paquetes, salidas, imagenes y contenidos.
 
 CREATE TABLE IF NOT EXISTS destinos (
@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     duracion_dias  INTEGER NOT NULL,
     disponible     BOOLEAN NOT NULL DEFAULT FALSE,
     destacado      BOOLEAN NOT NULL DEFAULT FALSE,
+    ultima_modificacion TIMESTAMP,
     destino_id     BIGINT NOT NULL REFERENCES destinos (id)
 );
 

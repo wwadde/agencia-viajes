@@ -19,6 +19,9 @@ CREATE TABLE mensajes_chat
     mensaje         TEXT        NOT NULL,
     rol_mensaje     VARCHAR(20) NOT NULL,
     fecha_hora      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    input_tokens    INTEGER,
+    output_tokens   INTEGER,
+    total_tokens    INTEGER,
 
     CONSTRAINT fk_mensajes_chat_conversacion
         FOREIGN KEY (conversacion_id)

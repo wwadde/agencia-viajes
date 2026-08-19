@@ -9,6 +9,7 @@ import com.agencia.service.PaqueteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -102,6 +103,10 @@ public class PaqueteTools {
                     """
     )
     public List<SalidaDTO> obtenerProximasSalidas(Long paqueteId, LocalDate desde, Integer personas) {
+
+        if (desde == null) {
+            desde = LocalDate.now();
+        }
 
         log.info("Consultando próximas salidas: paqueteId={}, desde={}, personas={}", paqueteId, desde, personas);
 

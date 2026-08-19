@@ -1,4 +1,4 @@
--- V4__reservas.sql
+-- V3__reservas.sql
 -- Gestion de reservas de clientes por salida con control de cupos.
 
 CREATE TABLE IF NOT EXISTS reservas (

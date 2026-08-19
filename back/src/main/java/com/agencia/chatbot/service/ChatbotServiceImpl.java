@@ -6,6 +6,8 @@ import com.agencia.chatbot.dto.ConversacionDTO;
 import com.agencia.chatbot.entity.Conversacion;
 import com.agencia.chatbot.entity.RolMensaje;
 import com.agencia.chatbot.repository.ConversacionRepository;
+import com.agencia.chatbot.utils.ToolCallEvent;
+import com.agencia.chatbot.utils.ToolCallObservingAdvisor;
 import com.agencia.config.ChatMemoryManager;
 import com.agencia.domain.Usuario;
 import com.agencia.exception.ChatbotException;
@@ -15,6 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,14 +30,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +55,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final ChatMemoryManager chatMemoryManager;
     private static final ZoneId colombiaZoneId = ZoneId.of("America/Bogota");
 
-    private static final int MAX_PREGUNTAS = 5;
+    public static final int MAX_PREGUNTAS = 5;
 
 
     @Override
@@ -60,7 +71,6 @@ public class ChatbotServiceImpl implements ChatbotService {
         }
 
         Conversacion conversacion = obtenerOCrearConversacion(request, usuario);
-        AtomicBoolean errorSistema = new AtomicBoolean(false);
         SseEmitter emitter = new SseEmitter(180_000L);
 
 
@@ -80,34 +90,67 @@ public class ChatbotServiceImpl implements ChatbotService {
         // Si no existe en memoria, se carga la conversacion desde la base de datos y se vuelve a cargar en chatmemory
         chatMemoryManager.prepararMemoriaConversacion(conversacion.getId());
 
+        // Side channel de tools
+        Sinks.Many<String> toolSink = Sinks.many().unicast().onBackpressureBuffer();
+        ToolCallObservingAdvisor toolObserver = new ToolCallObservingAdvisor(event -> {
+            if (event.phase() == ToolCallEvent.Phase.STARTED) {
+                toolSink.tryEmitNext(event.name());
+            }
+        });
+
+        // Suscribir tools SSE
+        Disposable toolSubscription = toolSink.asFlux()
+                .subscribe(
+                        toolName -> enviarEvento(emitter, "tool", toolName),
+                        e -> log.warn("Error en tool sink", e)
+                );
+
         StringBuilder respuestaCompleta = new StringBuilder();
+        AtomicReference<Integer> inputTokens = new AtomicReference<>();
+        AtomicReference<Integer> outputTokens = new AtomicReference<>();
+        AtomicReference<Integer> totalTokens = new AtomicReference<>();
+        AtomicBoolean errorSistema = new AtomicBoolean(false);
 
         Disposable disposable = chatClient.prompt()
                 .user(request.peticion())
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversacion.getId().toString()))
+                .advisors(a -> a
+                        .advisors(toolObserver)
+                        .param(ChatMemory.CONVERSATION_ID, conversacion.getId().toString()))
                 .stream()
-                .content()
-                .doOnNext(respuestaCompleta::append)
-                .doFinally(_ -> {
-                    if (!respuestaCompleta.isEmpty() && !errorSistema.get()) {
-                        guardarConversacionAsync(conversacion, request.peticion(), respuestaCompleta.toString(), errorSistema.get());
-                    }
-                    log.info("Conversación {} finalizada", conversacion.getId());
+                .chatResponse()
+                .doOnNext(chatResponse -> procesarChunk(chatResponse, respuestaCompleta, inputTokens, outputTokens, totalTokens, emitter))
+                .doOnError(error -> {
+                    errorSistema.set(true);
+                    log.error("Error durante el streaming", error);
+                    enviarEvento(emitter, "error", "Lo siento, ha ocurrido un error en stream. Inténtalo nuevamente en unos momentos.");
+                    emitter.complete();
                 })
-                .subscribe(
-                        token -> enviarEvento(emitter, "message", token),
-                        error -> {
-                            log.error("Error durante el streaming", error);
-                            errorSistema.set(true);
-                            enviarEvento(emitter, "error", "Lo siento, ha ocurrido un error. Inténtalo nuevamente en unos momentos.");
-                            emitter.complete();
-                        },
-                        emitter::complete
-                );
+                .doOnComplete(() -> {
+                    if (!respuestaCompleta.isEmpty() && !errorSistema.get()) {
+                        guardarConversacionAsync(
+                                conversacion,
+                                request.peticion(),
+                                respuestaCompleta.toString(),
+                                errorSistema.get(),
+                                inputTokens.get(),
+                                outputTokens.get(),
+                                totalTokens.get()
+                        );
+                    }
+                    log.info("Conversación {} finalizada | tokens total={}", conversacion.getId(), totalTokens.get() != null ? totalTokens.get() : null);
+                    emitter.complete();
+                })
+                .subscribe();
 
-        emitter.onCompletion(disposable::dispose);
-        emitter.onTimeout(disposable::dispose);
-        emitter.onError(_ -> disposable.dispose());
+        Runnable cleanup = () -> {
+            disposable.dispose();
+            toolSubscription.dispose();
+            toolSink.tryEmitComplete();
+        };
+
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(cleanup);
+        emitter.onError(_ -> cleanup.run());
 
 
         return emitter;
@@ -146,9 +189,10 @@ public class ChatbotServiceImpl implements ChatbotService {
     }
 
 
-    private void guardarConversacionAsync(Conversacion conversacion, String pregunta, String respuesta, boolean errorSistema) {
+    private void guardarConversacionAsync(Conversacion conversacion, String pregunta, String respuesta, boolean errorSistema,
+                                          Integer inputTokens, Integer outputTokens, Integer totalTokens) {
 
-        Mono.fromRunnable(() -> guardarChatService.guardarRespuestas(respuesta, pregunta, conversacion, errorSistema))
+        Mono.fromRunnable(() -> guardarChatService.guardarRespuestas(respuesta, pregunta, conversacion, errorSistema, inputTokens, outputTokens, totalTokens))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(
                         null,
@@ -167,6 +211,31 @@ public class ChatbotServiceImpl implements ChatbotService {
         } catch (IOException e) {
             emitter.completeWithError(e);
             return false;
+        }
+    }
+
+    private void procesarChunk(ChatResponse chatResponse, StringBuilder respuestaCompleta, AtomicReference<Integer> inputTokens,
+                               AtomicReference<Integer> outputTokens, AtomicReference<Integer> totalTokens, SseEmitter emitter) {
+        if (chatResponse == null) return;
+
+        String texto = Optional.ofNullable(chatResponse.getResult())
+                .map(Generation::getOutput)
+                .map(AssistantMessage::getText)
+                .orElse(null);
+
+        if (texto != null && !texto.isBlank()) {
+            respuestaCompleta.append(texto);
+            enviarEvento(emitter, "message", texto);
+        }
+
+        Usage usage = Optional.ofNullable(chatResponse.getMetadata())
+                .map(ChatResponseMetadata::getUsage)
+                .orElse(null);
+
+        if (usage != null && usage.getTotalTokens() != null && usage.getTotalTokens() > 0) {
+            Optional.ofNullable(usage.getPromptTokens()).ifPresent(inputTokens::set);
+            Optional.ofNullable(usage.getCompletionTokens()).ifPresent(outputTokens::set);
+            totalTokens.set(usage.getTotalTokens());
         }
     }
 

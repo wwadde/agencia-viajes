@@ -50,6 +50,8 @@ public class PaqueteVectorService {
 
     private static Document getDocument(Paquete paquete) {
         String contenido = """
+                PaqueteId: %d
+                
                 Nombre: %s
                 
                 Descripción:
@@ -61,6 +63,7 @@ public class PaqueteVectorService {
                 Destino:
                 %s
                 """.formatted(
+                paquete.getId(),
                 paquete.getNombre(),
                 paquete.getDescripcion(),
                 paquete.getDetalle(),

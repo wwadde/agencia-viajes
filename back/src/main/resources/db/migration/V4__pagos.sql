@@ -1,4 +1,4 @@
--- V5__pagos.sql
+-- V4__pagos.sql
 -- Estructura base para pagos de reservas e integracion futura con pasarela.
 
 CREATE TABLE IF NOT EXISTS pagos (

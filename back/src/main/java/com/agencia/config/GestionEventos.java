@@ -39,21 +39,21 @@ public class GestionEventos {
 
             if (outbox.getTipoEntidad() == TipoEntidadOutbox.PAQUETE) {
 
-                boolean exitoso = paqueteVectorService.indexarPaquete(outbox.getEntidadId(), TipoEventoOutbox.CREADO);
+                boolean exitoso = paqueteVectorService.indexarPaquete(outbox.getEntidadId(), outbox.getTipoEvento());
 
                 if (exitoso) {
-                    eventoOutboxRepository.actualizar(outbox.getId(), EstadoEventoOutbox.PROCESADO, LocalDateTime.now());
+                    eventoOutboxService.actualizarEstado(outbox.getId(), EstadoEventoOutbox.PROCESADO);
 
                     log.info("Evento Outbox procesado correctamente: {}", outbox.getId());
 
                 } else {
-                    eventoOutboxRepository.actualizar(outbox.getId(), EstadoEventoOutbox.PENDIENTE, LocalDateTime.now());
+                    eventoOutboxService.actualizarEstado(outbox.getId(), EstadoEventoOutbox.PENDIENTE);
                 }
             }
 
         } catch (Exception e) {
 
-            eventoOutboxRepository.actualizar(outbox.getId(), EstadoEventoOutbox.PENDIENTE, LocalDateTime.now());
+            eventoOutboxService.actualizarEstado(outbox.getId(), EstadoEventoOutbox.PENDIENTE);
 
             log.error("Error procesando evento Outbox {}", outbox.getId(), e);
         }

@@ -61,7 +61,6 @@ public class PaqueteService {
     @Value("${storage.public-base-url:}")
     private String storagePublicBaseUrl;
 
-    @Tool(name = "paquetesDisponibles", description = "Devuelve una lista de paquetes turísticos disponibles en la agencia")
     public List<PaqueteResumenDTO> listarPublicos() {
         return paqueteRepository.findByDisponibleTrueOrderByDestacadoDescNombreAsc()
                 .stream()
@@ -126,7 +125,7 @@ public class PaqueteService {
 
     private void applyUpsert(Paquete paquete, PaqueteUpsertDTO dto, Destino destino, boolean syncImagenes) {
         paquete.setNombre(dto.nombre().trim());
-        paquete.setSlug(resolveUniqueSlug(paquete.getId(), dto.slug(), dto.nombre()));
+        paquete.setSlug(slugify(dto.nombre().trim()));
         paquete.setDescripcion(dto.descripcion().trim());
         paquete.setDetalle(dto.detalle().trim());
         paquete.setDuracionDias(dto.duracionDias());
@@ -147,8 +146,8 @@ public class PaqueteService {
         Paquete paquete = paqueteRepository.findDetalleBaseById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Paquete no encontrado: " + id));
 
-        // Evita MultipleBagFetchException cargando la segunda colección en una consulta separada.
-        Hibernate.initialize(paquete.getSalidas());
+        List<Salida> salidas = salidaRepository.findByPaqueteId(paquete.getId());
+        paquete.setSalidas(salidas);
         return paquete;
     }
 
@@ -323,13 +322,10 @@ public class PaqueteService {
         return slug.length() > 240 ? slug.substring(0, 240) : slug;
     }
 
+    @Transactional(readOnly = true)
     public List<PaqueteResumenDTO> buscarPaquetes(
-            String destino,
-            String pais,
-            Integer duracionMaxima,
-            BigDecimal presupuestoMaximo,
-            LocalDate fechaSalida,
-            Integer personas
+            String destino, String pais, Integer duracionMaxima,
+            BigDecimal presupuestoMaximo, LocalDate fechaSalida, Integer personas
     ) {
 
         Specification<Paquete> specification =

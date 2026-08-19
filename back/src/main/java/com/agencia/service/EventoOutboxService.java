@@ -8,6 +8,7 @@ import com.agencia.utils.TipoEventoOutbox;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -29,6 +30,14 @@ public class EventoOutboxService {
                 .creadoEn(LocalDateTime.now())
                 .build();
 
+        // Cancelar cualquier evento pendiente o procesando existente para la misma entidad
+        repository.encontrarSegunTipo(tipoEntidad, entidadId, EstadoEventoOutbox.PROCESANDO, EstadoEventoOutbox.PENDIENTE).ifPresent(eventoExiste -> {
+            eventoExiste.setEstado(EstadoEventoOutbox.CANCELADO);
+            eventoExiste.setProcesadoEn(LocalDateTime.now());
+            repository.save(eventoExiste);
+        });
+
+
         var entidad = repository.save(evento);
 
         applicationEventPublisher.publishEvent(new EventoOutboxCreado(entidad));
@@ -38,6 +47,7 @@ public class EventoOutboxService {
     public record EventoOutboxCreado(EventoOutbox outbox){}
 
 
+    @Transactional
     public boolean intentarTomarEvento(UUID id) {
 
         return repository.intentarTomarEvento(id, EstadoEventoOutbox.PENDIENTE,
@@ -45,6 +55,14 @@ public class EventoOutboxService {
                 LocalDateTime.now()
         ) == 1;
     }
+
+    @Transactional
+    public void actualizarEstado(UUID id, EstadoEventoOutbox estado) {
+        repository.actualizar(id, estado, LocalDateTime.now());
+    }
+
+
+
 
 
 }

@@ -1,11 +1,15 @@
 package com.agencia.config;
 
-import com.agencia.chatbot.utils.DateTimeTools;
+import com.agencia.chatbot.service.ChatbotServiceImpl;
 import com.agencia.chatbot.utils.PaqueteTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,14 +55,26 @@ public class ChatClientConfig {
 
 
     @Bean
+    public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
+        return MessageWindowChatMemory.builder()
+                .chatMemoryRepository(chatMemoryRepository)
+                .maxMessages(ChatbotServiceImpl.MAX_PREGUNTAS * 2) // 5 preguntas y 5 respuestas
+                .build();
+    }
+
+    // TODO optimizar el flujo con el rag porque actualmente siempre lo usa y agregar el contexto a todas las peticiones siguientes. optimizar tambien los prompts para que no repita llamadas a tools
+    @Bean
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, VectorStore vectorStore,
-                                 DateTimeTools dateTimeTools, PaqueteTools paqueteTools) {
+                                 PaqueteTools paqueteTools) {
 
         return chatClientBuilder.defaultSystem(SYSTEM_PROMPT)
-                .defaultTools(dateTimeTools, paqueteTools)
+                .defaultTools(paqueteTools)
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                        QuestionAnswerAdvisor.builder(vectorStore).build()
+                        QuestionAnswerAdvisor.builder(vectorStore)
+                                .searchRequest(SearchRequest.builder().topK(3).similarityThreshold(0.6).build())
+                                .build()
+//                        new SimpleLoggerAdvisor()
                 )
                 .build();
 

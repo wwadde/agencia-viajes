@@ -4,5 +4,6 @@ public enum EstadoEventoOutbox {
     PENDIENTE,
     PROCESANDO,
     PROCESADO,
-    FALLIDO
+    FALLIDO,
+    CANCELADO
 }

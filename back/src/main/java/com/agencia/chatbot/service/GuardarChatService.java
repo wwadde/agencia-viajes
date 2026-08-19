@@ -22,7 +22,8 @@ public class GuardarChatService {
     private final MensajeChatRepository mensajeChatRepository;
 
     @Transactional
-    public void guardarRespuestas(String respuesta, String peticion, Conversacion conversacion, boolean error) {
+    public void guardarRespuestas(String respuesta, String peticion, Conversacion conversacion, boolean error,
+                                  Integer inputTokens, Integer outputTokens, Integer totalTokens) {
 
         LocalDateTime fecha = LocalDateTime.now();
 
@@ -31,6 +32,7 @@ public class GuardarChatService {
                 .fechaHora(fecha)
                 .rolMensaje(RolMensaje.USUARIO)
                 .conversacion(conversacion)
+                .inputTokens(inputTokens)
                 .build();
 
         MensajeChat mensajeSistema = MensajeChat.builder()
@@ -38,6 +40,8 @@ public class GuardarChatService {
                 .fechaHora(fecha)
                 .rolMensaje(error ? RolMensaje.SYSTEM : RolMensaje.CHATBOT)
                 .conversacion(conversacion)
+                .outputTokens(outputTokens)
+                .totalTokens(totalTokens)
                 .build();
 
         mensajeChatRepository.saveAll(List.of(

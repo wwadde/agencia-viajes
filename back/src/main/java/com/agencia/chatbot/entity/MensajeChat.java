@@ -32,6 +32,15 @@ public class MensajeChat {
     @JoinColumn(name = "conversacion_id")
     private Conversacion conversacion;
 
+    @Column(name = "input_tokens")
+    private Integer inputTokens;
+
+    @Column(name = "output_tokens")
+    private Integer outputTokens;
+
+    @Column(name = "total_tokens")
+    private Integer totalTokens;
+
 
 }
 

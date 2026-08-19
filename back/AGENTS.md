@@ -34,7 +34,7 @@
 
 ## Data and migrations
 - DB is PostgreSQL from env vars (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) in `src/main/resources/application.yaml`.
-- Flyway migrations are authoritative schema history in `src/main/resources/db/migration` (`V1__init_schema.sql`, `V2__usuario_rol.sql`, `V3__catalogo_paquetes_y_contenidos.sql`, `V4__reservas.sql`, `V5__pagos.sql`).
+- Flyway migrations are authoritative schema history in `src/main/resources/db/migration` (`V1__init_schema.sql`, `V2__usuario_rol.sql`, `V2__catalogo_paquetes_y_contenidos.sql`, `V3__reservas.sql`, `V4__pagos.sql`).
 - Catalog images are modeled as entity rows (`ImagenPaquete`) with `url`, `orden`, `principal`; store only local relative references in DB (prefer `carpeta/archivo.ext`, never absolute HTTP URL) and build public URL at response time.
 - Reservas persist a snapshot of prices (`precio_unitario`, `precio_total`) and use `estado` (`PENDIENTE`, `CONFIRMADA`, `CANCELADA`) with cupo updates done transactionally.
 - Pagos use a dedicated `pagos` table linked to `reservas`, with states (`PENDIENTE`, `REQUIERE_ACCION`, `APROBADO`, `RECHAZADO`, `CANCELADO`, `EXPIRADO`) and provider (`SIN_CONFIGURAR`, `MERCADOPAGO`, `STRIPE`, `PAYU`).

@@ -3,6 +3,7 @@ package com.agencia.config;
 import com.agencia.chatbot.service.PaqueteVectorService;
 import com.agencia.domain.EventoOutbox;
 import com.agencia.repository.EventoOutboxRepository;
+import com.agencia.service.EventoOutboxService;
 import com.agencia.utils.EstadoEventoOutbox;
 import com.agencia.utils.TipoEntidadOutbox;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class TareasScheduler {
     private final ChatMemoryManager chatMemoryManager;
     private final EventoOutboxRepository eventoOutboxRepository;
     private final PaqueteVectorService paqueteVectorService;
+    private final EventoOutboxService eventoOutboxService;
 
     @Async
     @Scheduled(cron = "0 5 0 * * ?")
@@ -54,7 +56,7 @@ public class TareasScheduler {
                 boolean exitoso = paqueteVectorService.indexarPaquete(evento.getEntidadId(), evento.getTipoEvento());
                 if (exitoso) {
 
-                    eventoOutboxRepository.actualizar(evento.getId(), EstadoEventoOutbox.PROCESADO, LocalDateTime.now());
+                    eventoOutboxService.actualizarEstado(evento.getId(), EstadoEventoOutbox.PROCESADO);
                     log.info("Evento Outbox procesado correctamente: {}", evento.getId());
                 }
             }
