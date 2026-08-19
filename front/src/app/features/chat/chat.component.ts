@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnDestroy, OnInit, inject, signal, ElementRef, V
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ChatMessage, ConversacionResumen } from './chat.model';
+import { ChatMessage, ChatMessageRole, ConversacionResumen } from './chat.model';
 import { ChatService } from './chat.service';
 import { AuthService } from '../../core/services/auth.service';
 import { RelativeDatePipe } from '../../core/pipes/relative-dates.pipe';
@@ -28,6 +28,7 @@ export class ChatComponent implements OnDestroy, OnInit {
   private readonly pendingTokens: string[] = [];
   private typingInterval: number | null = null;
   private streamCompleted = false;
+  private assistantMessageId: string | null = null;
 
   open = signal(false);
   closing = signal(false);
@@ -168,6 +169,41 @@ export class ChatComponent implements OnDestroy, OnInit {
 
   }
 
+
+  private addStatusMessage(role: ChatMessageRole, content: string): void {
+
+    this.messages.update(messages => [
+      ...messages,
+      {
+        id: crypto.randomUUID(),
+        role,
+        content
+      }
+    ]);
+
+    this.scrollToBottom();
+  }
+
+  private ensureAssistantMessage(): void {
+
+    if (this.assistantMessageId !== null) {
+      return;
+    }
+
+    this.assistantMessageId = crypto.randomUUID();
+
+    this.messages.update(messages => [
+      ...messages,
+      {
+        id: this.assistantMessageId!,
+        role: 'CHATBOT',
+        content: ''
+      }
+    ]);
+
+    this.scrollToBottom();
+  }
+
   send(): void {
 
     if (!this.prompt.trim() || this.loading()) {
@@ -176,6 +212,7 @@ export class ChatComponent implements OnDestroy, OnInit {
 
     this.pendingTokens.length = 0;
     this.streamCompleted = false;
+    this.assistantMessageId = null;
 
     if (this.typingInterval !== null) {
       clearInterval(this.typingInterval);
@@ -190,11 +227,6 @@ export class ChatComponent implements OnDestroy, OnInit {
         id: crypto.randomUUID(),
         role: 'USUARIO',
         content: question
-      },
-      {
-        id: crypto.randomUUID(),
-        role: 'CHATBOT',
-        content: ''
       }
     ]);
 
@@ -221,17 +253,22 @@ export class ChatComponent implements OnDestroy, OnInit {
               this.conversations.set([]);
               this.page = 0;
               this.lastPage = false;
-              this.loadConversations();
               return;
 
             case 'message':
+              this.ensureAssistantMessage();
               this.pendingTokens.push(event.data);
               this.startTyping();
               return;
 
+            case 'tool':
+              this.pendingTokens.length = 0;
+              this.addStatusMessage('TOOL', event.data);
+              return;
+
             case 'error':
               this.pendingTokens.length = 0;
-              this.updateLastMessage(event.data);
+              this.addStatusMessage('ERROR', event.data);
               this.loading.set(false);
               return;
 
@@ -250,7 +287,7 @@ export class ChatComponent implements OnDestroy, OnInit {
             error?.message ??
             'Lo siento, ha ocurrido un error. Inténtalo nuevamente en unos momentos.';
 
-          this.updateLastMessage(message);
+          this.addStatusMessage('ERROR', message);
 
           this.loading.set(false);
 
@@ -259,6 +296,13 @@ export class ChatComponent implements OnDestroy, OnInit {
         complete: () => {
 
           this.streamCompleted = true;
+
+          if (
+            this.pendingTokens.length === 0 &&
+            this.typingInterval === null
+          ) {
+            this.loading.set(false);
+          }
 
         }
 
@@ -276,28 +320,26 @@ export class ChatComponent implements OnDestroy, OnInit {
 
       const chunk = this.pendingTokens.shift();
 
-      if (chunk) {
+      if (chunk && this.assistantMessageId !== null) {
 
-        this.messages.update(messages => {
-
-          const copy = [...messages];
-
-          const last = copy[copy.length - 1];
-
-          copy[copy.length - 1] = {
-            ...last,
-            content: last.content + chunk
-          };
-
-          return copy;
-
-        });
+        this.messages.update(messages =>
+          messages.map(message =>
+            message.id === this.assistantMessageId
+              ? {
+                ...message,
+                content: message.content + chunk
+              }
+              : message
+          )
+        );
 
         this.scrollToBottom();
-
       }
 
-      if (this.streamCompleted && this.pendingTokens.length === 0) {
+      if (
+        this.streamCompleted &&
+        this.pendingTokens.length === 0
+      ) {
 
         if (this.typingInterval !== null) {
           clearInterval(this.typingInterval);
@@ -305,29 +347,11 @@ export class ChatComponent implements OnDestroy, OnInit {
         }
 
         this.loading.set(false);
-
       }
 
-    }, 50); // modifica el intervalo
-
+    }, 50);
   }
 
-  private updateLastMessage(content: string): void {
-
-    this.messages.update(messages => {
-
-      const copy = [...messages];
-
-      copy[copy.length - 1] = {
-        ...copy[copy.length - 1],
-        content
-      };
-
-      return copy;
-
-    });
-
-  }
 
   private scrollToBottom(): void {
 

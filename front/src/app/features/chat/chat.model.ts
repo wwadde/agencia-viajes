@@ -3,9 +3,15 @@ export interface ChatRequest {
   conversacionId?: string | null;
 }
 
+export type ChatMessageRole =
+  | 'USUARIO'
+  | 'CHATBOT'
+  | 'TOOL'
+  | 'ERROR';
+
 export interface ChatMessage {
   id: number | string;
-  role: 'USUARIO' | 'CHATBOT';
+  role: ChatMessageRole;
   content: string;
 }
 
@@ -32,7 +38,7 @@ export interface ConversacionResponse {
 export interface MensajeResponse {
   id: number;
   mensaje: string;
-  rolMensaje: 'USUARIO' | 'CHATBOT';
+  rolMensaje: ChatMessageRole;
   fechaHora: string;
 }
 

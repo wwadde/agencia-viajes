@@ -73,7 +73,8 @@
 
       </button>
 
-      <button (click)="toggleHistory()" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 cursor-pointer">
+      <button (click)="toggleHistory()"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 cursor-pointer">
 
         @if(showHistory()){
         ←
@@ -213,17 +214,55 @@
 
       @for(message of messages(); track message.id){
 
+      @if(message.role === 'TOOL') {
+
+      <div class="flex justify-start">
+
+        <div
+          class="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+
+          <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></span>
+
+          <span>
+            Consultando
+            <strong>{{ message.content }}</strong>
+          </span>
+
+        </div>
+
+      </div>
+
+      } @else if(message.role === 'ERROR') {
+
+      <div class="flex justify-start">
+
+        <div class="max-w-[85%] rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700">
+
+          <div class="font-semibold">
+            No se pudo completar la consulta
+          </div>
+
+          <div class="mt-1">
+            {{ message.content }}
+          </div>
+
+        </div>
+
+      </div>
+
+      } @else {
+
       <div class="flex" [class.justify-end]="message.role === 'USUARIO'"
         [class.justify-start]="message.role === 'CHATBOT'">
 
         <div class="max-w-[85%]
-                     rounded-2xl
-                     px-4
-                     py-3
-                     text-sm
-                     shadow-sm
-                     break-words
-                     whitespace-pre-wrap" [class.bg-sky-600]="message.role === 'USUARIO'"
+               rounded-2xl
+               px-4
+               py-3
+               text-sm
+               shadow-sm
+               break-words
+               whitespace-pre-wrap" [class.bg-sky-600]="message.role === 'USUARIO'"
           [class.text-white]="message.role === 'USUARIO'" [class.bg-white]="message.role === 'CHATBOT'"
           [class.text-slate-800]="message.role === 'CHATBOT'">
 
@@ -232,6 +271,8 @@
         </div>
 
       </div>
+
+      }
 
       }
 
