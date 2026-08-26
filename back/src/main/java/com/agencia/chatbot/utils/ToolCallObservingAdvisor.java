@@ -32,30 +32,59 @@ public class ToolCallObservingAdvisor implements CallAdvisor, StreamAdvisor {
     }
 
     @Override
-    public Flux<ChatClientResponse> adviseStream(ChatClientRequest request, StreamAdvisorChain chain) {
+    public Flux<ChatClientResponse> adviseStream(
+            ChatClientRequest request,
+            StreamAdvisorChain chain) {
+
         emitCompletions(request);
-        return chain.nextStream(request).doOnNext(this::emitStarts);
+
+        return chain.nextStream(request)
+                .doOnNext(this::emitStarts);
     }
 
     @Override
-    public ChatClientResponse adviseCall(ChatClientRequest request, CallAdvisorChain chain) {
+    public ChatClientResponse adviseCall(
+            ChatClientRequest request,
+            CallAdvisorChain chain) {
+
         emitCompletions(request);
+
         ChatClientResponse response = chain.nextCall(request);
+
         emitStarts(response);
+
         return response;
     }
 
     private void emitStarts(ChatClientResponse response) {
+
         ChatResponse chatResponse = response.chatResponse();
+
         if (chatResponse == null) {
             return;
         }
+
         chatResponse.getResults().stream()
                 .flatMap(g -> g.getOutput().getToolCalls().stream())
-                .filter(tc -> StringUtils.hasText(tc.id()) && StringUtils.hasText(tc.name()))
-                .filter(tc -> started.add(tc.id())) // de-dupe por id
-                .forEach(tc -> listener.accept(
-                        new ToolCallEvent(tc.id(), tc.name(), ToolCallEvent.Phase.STARTED)));
+                .filter(tc -> StringUtils.hasText(tc.name()))
+                .forEach(tc -> {
+
+                    String key = resolveToolKey(
+                            tc.id(),
+                            tc.name(),
+                            tc.arguments()
+                    );
+
+                    if (started.add(key)) {
+                        listener.accept(
+                                new ToolCallEvent(
+                                        tc.id(),
+                                        tc.name(),
+                                        ToolCallEvent.Phase.STARTED
+                                )
+                        );
+                    }
+                });
     }
 
     private void emitCompletions(ChatClientRequest request) {
@@ -63,9 +92,37 @@ public class ToolCallObservingAdvisor implements CallAdvisor, StreamAdvisor {
                 .filter(ToolResponseMessage.class::isInstance)
                 .map(ToolResponseMessage.class::cast)
                 .flatMap(msg -> msg.getResponses().stream())
-                .filter(r -> started.contains(r.id()) && completed.add(r.id()))
-                .forEach(r -> listener.accept(
-                        new ToolCallEvent(r.id(), r.name(), ToolCallEvent.Phase.COMPLETED)));
+                .filter(r -> StringUtils.hasText(r.name()))
+                .forEach(r -> {
+
+                    String key = resolveToolKey(
+                            r.id(),
+                            r.name(),
+                            null
+                    );
+
+                    if (started.contains(key) && completed.add(key)) {
+                        listener.accept(
+                                new ToolCallEvent(
+                                        r.id(),
+                                        r.name(),
+                                        ToolCallEvent.Phase.COMPLETED
+                                )
+                        );
+                    }
+                });
+    }
+
+    private String resolveToolKey(
+            String id,
+            String name,
+            String arguments) {
+
+        if (StringUtils.hasText(id)) {
+            return id;
+        }
+
+        return name + ":" + (arguments != null ? arguments : "");
     }
 
     @Override

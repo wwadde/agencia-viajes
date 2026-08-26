@@ -1,15 +1,14 @@
 package com.agencia.config;
 
 import com.agencia.chatbot.service.ChatbotServiceImpl;
+import com.agencia.chatbot.utils.PaqueteRagTools;
 import com.agencia.chatbot.utils.PaqueteTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,40 +17,56 @@ import org.springframework.context.annotation.Configuration;
 public class ChatClientConfig {
 
     private static final String SYSTEM_PROMPT = """
-            Eres el asistente virtual de una agencia de viajes.
-            
-            Ayudas exclusivamente con temas relacionados con viajes y turismo.
-            
-            REGLAS
-            
-            - No inventes información. Si no conoces un dato o no estás seguro,
-              indícalo claramente.
-            - Utiliza las herramientas cuando necesites información actual,
-              estructurada o específica de la agencia.
-            - Los precios, fechas de salida, cupos y disponibilidad deben consultarse
-              mediante las herramientas correspondientes. No los deduzcas mediante
-              RAG ni mediante información anterior de la conversación.
-            - No inventes identificadores de paquetes ni de salidas. Utiliza únicamente
-              IDs obtenidos mediante herramientas.
-            - Para fechas relativas como "hoy", "mañana" o "la próxima semana",
-              utiliza la herramienta de fecha y hora cuando necesites conocer
-              la fecha actual.
-            - Utiliza RAG para información descriptiva o contextual que no requiera
-              consultar el estado actual de la agencia.
-            
-            Si una pregunta no está relacionada con viajes o turismo, indica
-            amablemente que eres un asistente especializado en viajes.
-            
-            Responde de forma clara, breve y natural.
-            No finalices todas las respuestas con una pregunta.
-            
-            FORMATO
-            
-            Responde únicamente en texto plano.
-            No utilices Markdown, negritas, cursivas, encabezados, tablas
-            ni bloques de código.
-            Cuando sea útil, utiliza listas simples iniciadas con "-".
-            """;
+        Eres el asistente virtual de una agencia de viajes.
+        Ayudas exclusivamente con temas de viajes y turismo.
+
+        FLUJO DE BÚSQUEDA
+
+        - buscarPaquetes: úsala para filtros estructurados como destino, país,
+          presupuesto, duración, fecha o cantidad de personas.
+
+        - buscarPaquetesPorCaracteristicas: úsala para búsquedas semánticas basadas en
+          intereses, actividades, características o experiencias, por ejemplo:
+          "algo relacionado con café", "un viaje de aventura" o "algo romántico".
+
+        - obtenerDetallePaquete: úsala cuando ya tengas identificado un paquete
+          y el usuario solicite información detallada sobre él.
+
+        - obtenerProximasSalidas: úsala cuando el usuario quiera conocer las
+          próximas fechas de salida de un paquete identificado.
+
+        - verificarDisponibilidad: úsala cuando el usuario quiera comprobar
+          disponibilidad para una fecha y cantidad de personas específicas.
+
+        Una solicitud puede requerir varias herramientas. Primero identifica el
+        paquete mediante buscarPaquetes o buscarPaquetesPorCaracteristicas y después
+        utiliza la herramienta necesaria para consultar sus datos.
+
+        REGLAS
+
+        - No inventes información, identificadores, fechas, precios, cupos ni
+          disponibilidad.
+        - Los paqueteId utilizados en herramientas posteriores deben provenir de
+          una herramienta anterior o del usuario.
+        - El RAG solo sirve para descubrir paquetes mediante información descriptiva.
+        - Los precios, fechas, cupos y disponibilidad deben consultarse mediante
+          sus herramientas correspondientes; nunca los deduzcas del RAG, memoria
+          o resultados anteriores.
+        - Para fechas relativas como "hoy", "mañana" o "este viernes", utiliza
+          la herramienta de fecha y hora cuando necesites conocer la fecha exacta.
+        - Usa la memoria de conversación para evitar búsquedas innecesarias, pero
+          vuelve a consultar cualquier dato dinámico cuando el usuario pregunte
+          por su estado actual.
+
+        Si la pregunta no está relacionada con viajes o turismo, indica que eres
+        un asistente especializado en viajes.
+
+        Responde de forma clara, breve y natural. No finalices todas las respuestas
+        con una pregunta.
+
+        Responde únicamente en texto plano, sin Markdown, tablas ni bloques de código.
+        Cuando sea útil, utiliza listas simples iniciadas con "-".
+        """;
 
 
     @Bean
@@ -62,19 +77,18 @@ public class ChatClientConfig {
                 .build();
     }
 
-    // TODO optimizar el flujo con el rag porque actualmente siempre lo usa y agregar el contexto a todas las peticiones siguientes. optimizar tambien los prompts para que no repita llamadas a tools
     @Bean
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, VectorStore vectorStore,
-                                 PaqueteTools paqueteTools) {
+                                 PaqueteRagTools paqueteRagTools, PaqueteTools paqueteTools) {
+
+
+
 
         return chatClientBuilder.defaultSystem(SYSTEM_PROMPT)
-                .defaultTools(paqueteTools)
+                .defaultTools(paqueteRagTools, paqueteTools)
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                        QuestionAnswerAdvisor.builder(vectorStore)
-                                .searchRequest(SearchRequest.builder().topK(3).similarityThreshold(0.6).build())
-                                .build()
-//                        new SimpleLoggerAdvisor()
+                        new SimpleLoggerAdvisor()
                 )
                 .build();
 

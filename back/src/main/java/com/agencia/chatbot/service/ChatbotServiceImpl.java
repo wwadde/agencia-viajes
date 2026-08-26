@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -121,8 +120,9 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .doOnNext(chatResponse -> procesarChunk(chatResponse, respuestaCompleta, inputTokens, outputTokens, totalTokens, emitter))
                 .doOnError(error -> {
                     errorSistema.set(true);
-                    log.error("Error durante el streaming", error);
-                    enviarEvento(emitter, "error", "Lo siento, ha ocurrido un error en stream. Inténtalo nuevamente en unos momentos.");
+                    log.error("Error en el stream de conversación {}", conversacion.getId(), error);
+                    String mensajeUsuario = resolverMensajeError(error);
+                    enviarEvento(emitter, "error", mensajeUsuario);
                     emitter.complete();
                 })
                 .doOnComplete(() -> {
@@ -237,6 +237,37 @@ public class ChatbotServiceImpl implements ChatbotService {
             Optional.ofNullable(usage.getCompletionTokens()).ifPresent(outputTokens::set);
             totalTokens.set(usage.getTotalTokens());
         }
+    }
+
+    private String resolverMensajeError(Throwable error) {
+        // Desenrollamos posibles wrappers de Reactor / Spring
+        Throwable root = error;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+
+        // Error específico de Google GenAI
+        if (root instanceof com.google.genai.errors.ServerException serverEx) {
+            String msg = serverEx.getMessage() != null ? serverEx.getMessage() : "";
+
+            if (msg.contains("503") || msg.toLowerCase().contains("high demand")) {
+                return "El modelo de IA está temporalmente saturado (alta demanda). "
+                       + "Por favor intenta de nuevo en unos segundos.";
+            }
+            if (msg.contains("429") || msg.toLowerCase().contains("rate limit")
+                || msg.toLowerCase().contains("quota")) {
+                return "Se alcanzó el límite de uso del modelo. Intenta más tarde.";
+            }
+            return "Error del servicio de IA: " + msg;
+        }
+
+        if (root instanceof com.google.genai.errors.ClientException _) {
+            // 400, 404, etc.
+            return "Error de configuración o petición inválida hacia el modelo de IA.";
+        }
+
+        // Fallback genérico
+        return "Lo siento, ha ocurrido un error en el stream. Inténtalo nuevamente en unos momentos.";
     }
 
 }

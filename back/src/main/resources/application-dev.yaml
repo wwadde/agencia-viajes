@@ -27,3 +27,41 @@ app:
 storage:
   location: ${java.io.tmpdir}/agencia-images
   public-base-url: http://localhost:8080/images
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+  opentelemetry:
+    resource-attributes:
+      service.name: agencia-viajes
+      service.version: "1.0.0"
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+
+  otlp:
+    metrics:
+      export:
+        url: http://localhost:4318/v1/metrics
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+
+
+spring:
+  ai:
+    chat:
+      observations:
+        log-completion: true
+        log-prompt: true
+      client:
+        observations:
+          log-completion: true
+          log-prompt: true

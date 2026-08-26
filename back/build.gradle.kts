@@ -40,10 +40,14 @@ dependencies {
 	implementation("com.sksamuel.scrimage:scrimage-webp:4.3.10")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.springframework.boot:spring-boot-starter-restclient")
-	implementation("org.springframework.ai:spring-ai-starter-model-openai")
+//	implementation("org.springframework.ai:spring-ai-starter-model-openai")
 	implementation("org.springframework.ai:spring-ai-starter-vector-store-pgvector")
 	implementation("org.springframework.ai:spring-ai-vector-store-advisor")
+	implementation("org.springframework.ai:spring-ai-rag")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
+	implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
+	implementation("org.springframework.ai:spring-ai-starter-model-google-genai-embedding")
 
 
 	compileOnly("org.projectlombok:lombok")

@@ -14,10 +14,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-#    show-sql: true
+    #    show-sql: true
     properties:
       hibernate:
-#        format_sql: true
+    #        format_sql: true
     open-in-view: false
 
   config:
@@ -42,23 +42,48 @@ spring:
       max-request-size: 4MB
       enabled: true
 
+#  ai:
+#    vectorstore:
+#      pgvector:
+#        initialize-schema: false
+#        index-type: HNSW
+#        distance-type: COSINE_DISTANCE
+#        dimensions: 1536
+#    openai:
+#      base-url: https://openrouter.ai/api/v1
+#      api-key: ${OPENROUTER_KEY}
+#      chat:
+#        temperature: 0.4
+#        model: openrouter/auto
+#        #respuesta máxima en tokens
+#        max-tokens: 1024
+#      embedding:
+#        model: openai/text-embedding-3-small
+
   ai:
+    google:
+      genai:
+        project-id: gen-lang-client-0138360529
+        api-key: ${GEMINI_KEY}
+
+        chat:
+            model: gemini-3.1-flash-lite
+            temperature: 0.4
+            max-output-tokens: 1024
+
+        embedding:
+          api-key: ${GEMINI_KEY}
+          text:
+            model: gemini-embedding-001
+            dimensions: 1536
+
     vectorstore:
       pgvector:
         initialize-schema: false
         index-type: HNSW
         distance-type: COSINE_DISTANCE
         dimensions: 1536
-    openai:
-      base-url: https://openrouter.ai/api/v1
-      api-key: ${OPENROUTER_KEY}
-      chat:
-        temperature: 0.4
-        model: openrouter/auto
-        #respuesta máxima en tokens
-        max-tokens: 1024
-      embedding:
-        model: openai/text-embedding-3-small
+
 
   threads:
     virtual:
