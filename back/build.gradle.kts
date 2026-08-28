@@ -46,6 +46,7 @@ dependencies {
 	implementation("org.springframework.ai:spring-ai-rag")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
+	implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.21.0-alpha")
 	implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
 	implementation("org.springframework.ai:spring-ai-starter-model-google-genai-embedding")
 
