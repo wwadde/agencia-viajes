@@ -44,6 +44,12 @@ management:
         otlp:
           endpoint: http://localhost:4318/v1/traces
 
+    logging:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/logs
+
+
   otlp:
     metrics:
       export:
@@ -57,11 +63,13 @@ management:
 
 spring:
   ai:
-    chat:
+    tools:
       observations:
-        log-completion: true
-        log-prompt: true
-      client:
-        observations:
-          log-completion: true
-          log-prompt: true
+        include-content: true
+    vectorstore:
+      observations:
+        log-query-response: true
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: true
