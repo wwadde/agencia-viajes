@@ -1,0 +1,5 @@
+@if (interactive() || hasCoordinates()) {
+  <div #mapElement class="leaflet-map" [attr.aria-label]="interactive() ? 'Mapa para seleccionar la ubicacion' : 'Mapa de ubicacion'" role="application"></div>
+} @else {
+  <div class="leaflet-map-empty" role="status">Este destino aun no tiene coordenadas.</div>
+}
