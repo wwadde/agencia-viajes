@@ -22,4 +22,8 @@ public class Destino {
 
     private String ciudad;
 
+    private Double latitud;
+
+    private Double longitud;
+
 }
