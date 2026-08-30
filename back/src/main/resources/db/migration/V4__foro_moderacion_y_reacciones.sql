@@ -1,4 +1,4 @@
--- V6__foro_moderacion_y_reacciones.sql
+-- V4__foro_moderacion_y_reacciones.sql
 -- Agrega moderación de comentarios y reacciones de me gusta.
 
 ALTER TABLE foro_comentarios

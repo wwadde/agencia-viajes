@@ -1,4 +1,4 @@
--- V5__foro_posts_y_comentarios.sql
+-- V3__foro_posts_y_comentarios.sql
 -- Agrega módulo de foro para contenido SEO y engagement.
 
 CREATE TABLE IF NOT EXISTS foro_posts (
