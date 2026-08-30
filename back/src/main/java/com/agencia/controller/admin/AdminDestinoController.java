@@ -1,7 +1,6 @@
 package com.agencia.controller.admin;
 
 import com.agencia.domain.dto.DestinoDTO;
-import com.agencia.domain.dto.DestinoUpsertDTO;
 import com.agencia.service.DestinoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +38,7 @@ public class AdminDestinoController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> crear(@RequestBody @Valid DestinoUpsertDTO dto) {
+    public ResponseEntity<Void> crear(@RequestBody @Valid DestinoDTO dto) {
         Long id = destinoService.crear(dto);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -50,7 +49,7 @@ public class AdminDestinoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> actualizar(@PathVariable Long id, @RequestBody @Valid DestinoUpsertDTO dto) {
+    public ResponseEntity<Void> actualizar(@PathVariable Long id, @RequestBody @Valid DestinoDTO dto) {
         destinoService.actualizar(id, dto);
         return ResponseEntity.noContent().build();
     }

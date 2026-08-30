@@ -5,8 +5,9 @@ import com.agencia.domain.dto.PaqueteDetalleDTO;
 import com.agencia.domain.dto.PaqueteResumenDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface PaqueteMapper {
 
     @Mapping(target = "destino", source = "destino.nombre")

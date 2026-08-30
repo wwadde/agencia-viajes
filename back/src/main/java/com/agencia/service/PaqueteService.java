@@ -1,29 +1,21 @@
 package com.agencia.service;
 
+import com.agencia.config.mapper.DestinoMapper;
 import com.agencia.config.mapper.PaqueteMapper;
 import com.agencia.domain.Destino;
 import com.agencia.domain.ImagenPaquete;
 import com.agencia.domain.Paquete;
 import com.agencia.domain.Salida;
-import com.agencia.domain.dto.DestinoDTO;
-import com.agencia.domain.dto.ImagenPaqueteDTO;
-import com.agencia.domain.dto.ImagenPaqueteUpsertDTO;
-import com.agencia.domain.dto.PaqueteDetalleDTO;
-import com.agencia.domain.dto.PaqueteResumenDTO;
-import com.agencia.domain.dto.PaqueteUpsertDTO;
-import com.agencia.domain.dto.SalidaDTO;
+import com.agencia.domain.dto.*;
 import com.agencia.exception.RecursoNoEncontradoException;
 import com.agencia.exception.ReglaNegocioException;
 import com.agencia.repository.DestinoRepository;
 import com.agencia.repository.PaqueteRepository;
 import com.agencia.repository.SalidaRepository;
-import com.agencia.utils.EstadoEventoOutbox;
 import com.agencia.utils.PaqueteSpecification;
 import com.agencia.utils.TipoEntidadOutbox;
 import com.agencia.utils.TipoEventoOutbox;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,6 +49,7 @@ public class PaqueteService {
     private final SalidaRepository salidaRepository;
     private final EventoOutboxService eventoOutboxService;
     private final PaqueteMapper paqueteMapper;
+    private final DestinoMapper destinoMapper;
 
     @Value("${storage.public-base-url:}")
     private String storagePublicBaseUrl;
@@ -205,9 +198,7 @@ public class PaqueteService {
 
     private PaqueteDetalleDTO toDetalle(Paquete paquete) {
         Destino destino = paquete.getDestino();
-        DestinoDTO destinoDTO = destino == null
-                ? null
-                : new DestinoDTO(destino.getId(), destino.getNombre(), destino.getPais(), destino.getCiudad());
+        DestinoDTO destinoDTO = destinoMapper.toDTO(destino);
 
         List<SalidaDTO> salidas = paquete.getSalidas().stream()
                 .map(s -> new SalidaDTO(s.getId(), s.getFechaSalida(), s.getPrecio(), s.getCuposDisponibles()))

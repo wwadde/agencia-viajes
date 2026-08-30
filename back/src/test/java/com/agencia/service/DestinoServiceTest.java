@@ -1,7 +1,7 @@
 package com.agencia.service;
 
 import com.agencia.domain.Destino;
-import com.agencia.domain.dto.DestinoUpsertDTO;
+import com.agencia.domain.dto.DestinoDTO;
 import com.agencia.exception.RecursoNoEncontradoException;
 import com.agencia.repository.DestinoRepository;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class DestinoServiceTest {
     void crear_debePersistirCamposNormalizados() {
         when(destinoRepository.save(any(Destino.class))).thenReturn(Destino.builder().id(5L).build());
 
-        Long id = destinoService.crear(new DestinoUpsertDTO("  Cartagena ", " Colombia ", " Cartagena "));
+        Long id = destinoService.crear(new DestinoDTO("  Cartagena ", " Colombia ", " Cartagena ", null, null));
 
         assertEquals(5L, id);
         ArgumentCaptor<Destino> captor = ArgumentCaptor.forClass(Destino.class);
