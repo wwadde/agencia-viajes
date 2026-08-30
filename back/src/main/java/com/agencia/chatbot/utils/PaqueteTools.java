@@ -25,19 +25,13 @@ public class PaqueteTools {
     private final AgendaService agendaService;
 
     @Tool(
-            name = "buscarPaquetes",
             description = """
                     Busca paquetes mediante filtros estructurados: destino, país,
                     duración máxima, presupuesto, fecha de salida o cantidad de personas.
-                    
-                    Úsala para búsquedas con criterios concretos. Para búsquedas basadas
-                    en características, intereses o experiencias utiliza
-                    buscarPaquetesPorCaracteristicas.
-                    
-                    Devuelve paquetes con sus IDs. No inventes IDs.
+                    No inventes IDs.
                     """
     )
-    public List<PaqueteResumenDTO> buscarPaquetes(
+    public List<PaqueteResumenDTO> filtrarPaquetes(
             @ToolParam(description = "Destino o ciudad.", required = false) String destino,
             @ToolParam(description = "País del destino.", required = false) String pais,
             @ToolParam(description = "Duración máxima en días.", required = false) Integer duracionMaxima,
@@ -55,7 +49,6 @@ public class PaqueteTools {
 
 
     @Tool(
-            name = "obtenerDetallePaquete",
             description = """
                     Obtiene el detalle de un paquete turístico ya identificado.
                     
@@ -71,7 +64,6 @@ public class PaqueteTools {
 
 
     @Tool(
-            name = "obtenerProximasSalidas",
             description = """
                     Obtiene las próximas salidas de un paquete identificado.
                     
@@ -94,7 +86,6 @@ public class PaqueteTools {
     }
 
     @Tool(
-            name = "verificarDisponibilidad",
             description = """
                     Verifica la disponibilidad actual de un paquete para una fecha y
                     cantidad de personas específicas.
