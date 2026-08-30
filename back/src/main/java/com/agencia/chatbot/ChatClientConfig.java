@@ -1,4 +1,4 @@
-package com.agencia.config;
+package com.agencia.chatbot;
 
 import com.agencia.chatbot.service.ChatbotServiceImpl;
 import com.agencia.chatbot.utils.PaqueteRagTools;
@@ -6,12 +6,17 @@ import com.agencia.chatbot.utils.PaqueteTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public class ChatClientConfig {
@@ -19,28 +24,9 @@ public class ChatClientConfig {
     private static final String SYSTEM_PROMPT = """
         Eres el asistente virtual de una agencia de viajes.
         Ayudas exclusivamente con temas de viajes y turismo.
-
-        FLUJO DE BÚSQUEDA
-
-        - buscarPaquetes: úsala para filtros estructurados como destino, país,
-          presupuesto, duración, fecha o cantidad de personas.
-
-        - buscarPaquetesPorCaracteristicas: úsala para búsquedas semánticas basadas en
-          intereses, actividades, características o experiencias, por ejemplo:
-          "algo relacionado con café", "un viaje de aventura" o "algo romántico".
-
-        - obtenerDetallePaquete: úsala cuando ya tengas identificado un paquete
-          y el usuario solicite información detallada sobre él.
-
-        - obtenerProximasSalidas: úsala cuando el usuario quiera conocer las
-          próximas fechas de salida de un paquete identificado.
-
-        - verificarDisponibilidad: úsala cuando el usuario quiera comprobar
-          disponibilidad para una fecha y cantidad de personas específicas.
-
-        Una solicitud puede requerir varias herramientas. Primero identifica el
-        paquete mediante buscarPaquetes o buscarPaquetesPorCaracteristicas y después
-        utiliza la herramienta necesaria para consultar sus datos.
+        
+        Cuando no dispongas de información suficiente para responder,
+        utiliza las herramientas disponibles para buscarla.
 
         REGLAS
 
@@ -78,20 +64,28 @@ public class ChatClientConfig {
     }
 
     @Bean
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, VectorStore vectorStore,
-                                 PaqueteRagTools paqueteRagTools, PaqueteTools paqueteTools) {
+    public ChatClient chatClient(
+            ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, PaqueteRagTools ragTools, PaqueteTools paqueteTools,
+            Optional<SimpleLoggerAdvisor> loggerAdvisor) {
 
 
+        List<Advisor> advisors = new ArrayList<>();
+        advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
+        // Solo agrega el logger en dev
+        loggerAdvisor.ifPresent(advisors::add);
 
 
-        return chatClientBuilder.defaultSystem(SYSTEM_PROMPT)
-                .defaultTools(paqueteRagTools, paqueteTools)
-                .defaultAdvisors(
-                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
-                        new SimpleLoggerAdvisor()
-                )
+        return chatClientBuilder
+                .defaultSystem(SYSTEM_PROMPT)
+                .defaultTools(ragTools, paqueteTools)
+                .defaultAdvisors(advisors)
                 .build();
+    }
 
+    @Bean
+    @Profile("dev")
+    public SimpleLoggerAdvisor simpleLoggerAdvisor() {
+        return new SimpleLoggerAdvisor();
     }
 
 }
