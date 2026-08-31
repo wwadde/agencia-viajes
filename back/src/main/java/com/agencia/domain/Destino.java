@@ -3,6 +3,9 @@ package com.agencia.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "destinos")
 @NoArgsConstructor
@@ -25,5 +28,9 @@ public class Destino {
     private Double latitud;
 
     private Double longitud;
+
+    @Builder.Default
+    @ManyToMany(mappedBy = "destinos")
+    private List<Paquete> paquetes = new ArrayList<>();
 
 }

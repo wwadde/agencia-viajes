@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record DestinoDTO(
+
+        Long id,
+
         @NotBlank(message = "El nombre del destino es obligatorio")
         @Size(max = 160, message = "El nombre del destino no puede superar 160 caracteres")
         String nombre,
@@ -21,5 +24,8 @@ public record DestinoDTO(
         Double longitud
 
 ) {
+   public DestinoDTO(String nombre, String pais, String ciudad, Double latitud, Double longitud) {
+       this(null, nombre, pais, ciudad, latitud, longitud);
+   }
 }
 

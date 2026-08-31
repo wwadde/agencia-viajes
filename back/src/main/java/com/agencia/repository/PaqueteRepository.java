@@ -32,7 +32,7 @@ public interface PaqueteRepository extends JpaRepository<Paquete, Long>, JpaSpec
             """)
     List<String> findUsedSlugsByBase(@Param("baseSlug") String baseSlug, @Param("excludeId") Long excludeId);
 
-    @EntityGraph(attributePaths = {"destino", "imagenes"})
+        @EntityGraph(attributePaths = {"destinos", "imagenes"})
     List<Paquete> findByDisponibleTrueOrderByDestacadoDescNombreAsc();
 
     @Query("""
@@ -45,10 +45,10 @@ public interface PaqueteRepository extends JpaRepository<Paquete, Long>, JpaSpec
             """)
     List<PaqueteSitemapProjection> findPublicSlugsForSitemap();
 
-    @EntityGraph(attributePaths = {"destino", "imagenes"})
+        @EntityGraph(attributePaths = {"destinos", "imagenes"})
     List<Paquete> findAllByOrderByDestacadoDescNombreAsc();
 
-    @EntityGraph(attributePaths = {"destino", "imagenes"})
+        @EntityGraph(attributePaths = {"destinos", "imagenes"})
     @Query("""
             select p
             from Paquete p
@@ -56,7 +56,7 @@ public interface PaqueteRepository extends JpaRepository<Paquete, Long>, JpaSpec
             """)
     Optional<Paquete> findDetalleBaseById(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {"destino", "imagenes"})
+    @EntityGraph(attributePaths = {"destinos", "imagenes"})
     @Query("""
             select p
             from Paquete p
@@ -64,7 +64,7 @@ public interface PaqueteRepository extends JpaRepository<Paquete, Long>, JpaSpec
             """)
     Optional<Paquete> findDetalleBaseBySlug(@Param("slug") String slug);
 
-    @EntityGraph(attributePaths = {"destino"})
+        @EntityGraph(attributePaths = {"destinos"})
     @Query("""
         SELECT p FROM Paquete p WHERE p.id = :id
         """)

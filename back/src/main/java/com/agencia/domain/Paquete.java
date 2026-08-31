@@ -2,6 +2,9 @@ package com.agencia.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import tools.jackson.databind.JsonNode;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,8 +31,12 @@ public class Paquete {
     @Column(length = 2000)
     private String descripcion;
 
-    @Column(length = 5000)
-    private String detalle;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private JsonNode detalle;
+
+    @Column(name = "detalle_texto_plano", columnDefinition = "text")
+    private String detalleTextoPlano;
 
     @Column(name = "duracion_dias")
     private Integer duracionDias;
@@ -42,12 +49,18 @@ public class Paquete {
     private LocalDateTime ultimaModificacion;
 
     @Builder.Default
-    @OneToMany(mappedBy = "paquete")
+    @OneToMany(mappedBy = "paquete", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImagenPaquete> imagenes = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destino_id")
-    private Destino destino;
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "paquete_destinos",
+        joinColumns = @JoinColumn(name = "paquete_id"),
+        inverseJoinColumns = @JoinColumn(name = "destino_id")
+    )
+    @OrderColumn(name = "orden")
+    private List<Destino> destinos = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "paquete")

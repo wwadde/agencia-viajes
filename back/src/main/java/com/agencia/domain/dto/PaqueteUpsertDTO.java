@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 
@@ -19,9 +20,11 @@ public record PaqueteUpsertDTO(
         @Size(max = 2000, message = "La descripcion no puede superar 2000 caracteres")
         String descripcion,
 
-        @NotBlank(message = "El detalle del paquete es obligatorio")
-        @Size(max = 5000, message = "El detalle no puede superar 5000 caracteres")
-        String detalle,
+        @NotNull(message = "El detalle del paquete es obligatorio")
+        JsonNode detalle,
+
+        @Size(max = 100000, message = "El texto plano del detalle es demasiado extenso")
+        String detalleTextoPlano,
 
         @NotNull(message = "La duracion del paquete es obligatoria")
         @Positive(message = "La duracion debe ser mayor a cero")
@@ -33,8 +36,9 @@ public record PaqueteUpsertDTO(
         @NotNull(message = "Debe indicar si el paquete es destacado")
         Boolean destacado,
 
-        @NotNull(message = "El destino es obligatorio")
-        Long destinoId,
+        @NotNull(message = "Debe seleccionar al menos un destino")
+        @Size(min = 1, message = "Debe seleccionar al menos un destino")
+        List<Long> destinoIds,
 
         @Valid
         @Size(min = 1, message = "Debe agregar al menos una imagen")

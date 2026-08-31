@@ -41,7 +41,6 @@ public class DestinoService {
     public void actualizar(Long id, DestinoDTO dto) {
         Destino destino = getByIdOrThrow(id);
         destinoMapper.actualizar(dto, destino);
-        destinoRepository.save(destino);
     }
 
     public void eliminar(Long id) {

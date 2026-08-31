@@ -56,19 +56,19 @@ public final class PaqueteSpecification {
     }
 
     private static Specification<Paquete> destinoContiene(String destino) {
-        return (root, query, cb) ->
-                cb.like(
-                        cb.lower(root.get("destino").get("nombre")),
-                        "%" + destino.toLowerCase() + "%"
-                );
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Join<Paquete, com.agencia.domain.Destino> destinoJoin = root.join("destinos");
+            return cb.like(cb.lower(destinoJoin.get("nombre")), "%" + destino.toLowerCase() + "%");
+        };
     }
 
     private static Specification<Paquete> paisContiene(String pais) {
-        return (root, query, cb) ->
-                cb.like(
-                        cb.lower(root.get("destino").get("pais")),
-                        "%" + pais.toLowerCase() + "%"
-                );
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Join<Paquete, com.agencia.domain.Destino> destinoJoin = root.join("destinos");
+            return cb.like(cb.lower(destinoJoin.get("pais")), "%" + pais.toLowerCase() + "%");
+        };
     }
 
     private static Specification<Paquete> duracionMaxima(Integer dias) {

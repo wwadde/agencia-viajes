@@ -16,6 +16,7 @@ import com.agencia.utils.PaqueteSpecification;
 import com.agencia.utils.TipoEntidadOutbox;
 import com.agencia.utils.TipoEventoOutbox;
 import lombok.RequiredArgsConstructor;
+import tools.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,11 +30,11 @@ import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
 @Service
@@ -57,7 +58,7 @@ public class PaqueteService {
     public List<PaqueteResumenDTO> listarPublicos() {
         return paqueteRepository.findByDisponibleTrueOrderByDestacadoDescNombreAsc()
                 .stream()
-                .map(this::toResumen)
+                .map(paqueteMapper::toResumenDTO)
                 .toList();
     }
 
@@ -66,27 +67,26 @@ public class PaqueteService {
         if (!paquete.isDisponible()) {
             throw new RecursoNoEncontradoException("Paquete no encontrado");
         }
-        return toDetalle(paquete);
+        return paqueteMapper.toDetalleDTO(paquete);
     }
 
     public List<PaqueteResumenDTO> listarAdmin() {
         return paqueteRepository.findAllByOrderByDestacadoDescNombreAsc()
                 .stream()
-                .map(this::toResumen)
+                .map(paqueteMapper::toResumenDTO)
                 .toList();
     }
 
     public PaqueteDetalleDTO obtenerAdmin(Long id) {
-        return toDetalle(getByIdOrThrow(id));
+        return paqueteMapper.toDetalleDTO(getByIdOrThrow(id));
     }
 
     @Transactional
     public Long crear(PaqueteUpsertDTO dto) {
-        Destino destino = destinoRepository.findById(dto.destinoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Destino no encontrado: " + dto.destinoId()));
+        List<Destino> destinos = resolverDestinos(dto.destinoIds());
 
         Paquete paquete = Paquete.builder().build();
-        applyUpsert(paquete, dto, destino, true);
+        applyUpsert(paquete, dto, destinos, true);
         Paquete entidad = paqueteRepository.save(paquete);
         eventoOutboxService.registrar(TipoEntidadOutbox.PAQUETE, entidad.getId(), TipoEventoOutbox.CREADO);
         return entidad.getId();
@@ -95,10 +95,9 @@ public class PaqueteService {
     @Transactional
     public void actualizar(Long id, PaqueteUpsertDTO dto) {
         Paquete paquete = getByIdOrThrow(id);
-        Destino destino = destinoRepository.findById(dto.destinoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Destino no encontrado: " + dto.destinoId()));
+        List<Destino> destinos = resolverDestinos(dto.destinoIds());
 
-        applyUpsert(paquete, dto, destino, false);
+        applyUpsert(paquete, dto, destinos, false);
 
         if (dto.imagenes() != null) {
             paquete.getImagenes().clear();
@@ -111,20 +110,25 @@ public class PaqueteService {
 
     }
 
+    @Transactional
     public void eliminar(Long id) {
         eventoOutboxService.registrar(TipoEntidadOutbox.PAQUETE, id, TipoEventoOutbox.ELIMINADO);
         paqueteRepository.delete(getByIdOrThrow(id));
     }
 
-    private void applyUpsert(Paquete paquete, PaqueteUpsertDTO dto, Destino destino, boolean syncImagenes) {
+    private void applyUpsert(Paquete paquete, PaqueteUpsertDTO dto, List<Destino> destinos, boolean syncImagenes) {
         paquete.setNombre(dto.nombre().trim());
-        paquete.setSlug(slugify(dto.nombre().trim()));
+        paquete.setSlug(resolveUniqueSlug(paquete.getId(), dto.slug(), dto.nombre()));
         paquete.setDescripcion(dto.descripcion().trim());
-        paquete.setDetalle(dto.detalle().trim());
+        paquete.setDetalle(dto.detalle());
+        String textoPlano = dto.detalleTextoPlano();
+        paquete.setDetalleTextoPlano(textoPlano == null || textoPlano.isBlank()
+            ? extraerTextoPlano(dto.detalle()) : normalizarTextoPlano(textoPlano));
         paquete.setDuracionDias(dto.duracionDias());
         paquete.setDisponible(Boolean.TRUE.equals(dto.disponible()));
         paquete.setDestacado(Boolean.TRUE.equals(dto.destacado()));
-        paquete.setDestino(destino);
+        paquete.getDestinos().clear();
+        paquete.getDestinos().addAll(destinos);
         paquete.setUltimaModificacion(LocalDateTime.now());
 
         if (syncImagenes && dto.imagenes() != null) {
@@ -133,6 +137,62 @@ public class PaqueteService {
             paquete.getImagenes().addAll(nuevasImagenes);
         }
 
+    }
+
+    private List<Destino> resolverDestinos(List<Long> destinoIds) {
+        if (destinoIds.size() != new HashSet<>(destinoIds).size()) {
+            throw new ReglaNegocioException("No se puede repetir un destino en la ruta");
+        }
+        List<Destino> destinos = destinoRepository.findAllById(destinoIds);
+        Set<Long> idsUnicos = new HashSet<>(destinoIds);
+        if (destinos.size() != idsUnicos.size()) {
+            Set<Long> encontrados = destinos.stream().map(Destino::getId).collect(java.util.stream.Collectors.toSet());
+            Long faltante = destinoIds.stream().filter(id -> !encontrados.contains(id)).findFirst().orElse(null);
+            throw new RecursoNoEncontradoException("Destino no encontrado: " + faltante);
+        }
+        return destinoIds.stream().map(id -> destinos.stream()
+                .filter(destino -> destino.getId().equals(id))
+                .findFirst().orElseThrow()).toList();
+    }
+
+    private String extraerTextoPlano(JsonNode detalle) {
+        if (detalle == null) {
+            return "";
+        }
+        StringBuilder texto = new StringBuilder();
+        extraerTextoPlano(detalle, texto);
+        return normalizarTextoPlano(texto.toString());
+    }
+
+    private String normalizarTextoPlano(String texto) {
+        return texto.lines()
+            .map(String::trim)
+            .filter(linea -> !linea.isBlank())
+            .collect(Collectors.joining("\n"));
+    }
+
+    private void extraerTextoPlano(JsonNode nodo, StringBuilder texto) {
+        if (nodo == null || nodo.isNull()) {
+            return;
+        }
+        if (nodo.isString()) {
+            if (!texto.isEmpty() && texto.charAt(texto.length() - 1) != '\n') {
+                texto.append(' ');
+            }
+            texto.append(nodo.stringValue());
+            return;
+        }
+        if (nodo.isObject() && nodo.has("content")) {
+            nodo.get("content").forEach(hijo -> extraerTextoPlano(hijo, texto));
+            String tipo = nodo.has("type") ? nodo.get("type").asString() : "";
+            if ("paragraph".equals(tipo) || "heading".equals(tipo) || "listItem".equals(tipo)) {
+                texto.append('\n');
+            }
+            return;
+        }
+        if (nodo.isArray()) {
+            nodo.forEach(hijo -> extraerTextoPlano(hijo, texto));
+        }
     }
 
     private Paquete getByIdOrThrow(Long id) {
@@ -158,7 +218,6 @@ public class PaqueteService {
         return paquete;
     }
 
-
     private Paquete resolvePublico(String idOrSlug) {
         if (idOrSlug == null || idOrSlug.isBlank()) {
             throw new ReglaNegocioException("Debe enviar un identificador de paquete válido");
@@ -170,58 +229,6 @@ public class PaqueteService {
         }
 
         return getBySlugOrThrow(value);
-    }
-
-    private PaqueteResumenDTO toResumen(Paquete paquete) {
-        Destino destino = paquete.getDestino();
-        String imagenPrincipal = paquete.getImagenes().stream()
-                .filter(ImagenPaquete::isPrincipal)
-                .min(Comparator.comparing(i -> i.getOrden() == null ? Integer.MAX_VALUE : i.getOrden()))
-                .or(() -> paquete.getImagenes().stream()
-                        .min(Comparator.comparing(i -> i.getOrden() == null ? Integer.MAX_VALUE : i.getOrden())))
-                .map(ImagenPaquete::getUrl)
-                .map(this::buildPublicImageUrl)
-                .orElse(null);
-        return new PaqueteResumenDTO(
-                paquete.getId(),
-                paquete.getNombre(),
-                paquete.getSlug(),
-                paquete.getDescripcion(),
-                paquete.getDuracionDias(),
-                paquete.isDestacado(),
-                destino.getNombre(),
-                destino.getCiudad(),
-                destino.getPais(),
-                imagenPrincipal
-        );
-    }
-
-    private PaqueteDetalleDTO toDetalle(Paquete paquete) {
-        Destino destino = paquete.getDestino();
-        DestinoDTO destinoDTO = destinoMapper.toDTO(destino);
-
-        List<SalidaDTO> salidas = paquete.getSalidas().stream()
-                .map(s -> new SalidaDTO(s.getId(), s.getFechaSalida(), s.getPrecio(), s.getCuposDisponibles()))
-                .toList();
-
-        List<ImagenPaqueteDTO> imagenes = paquete.getImagenes().stream()
-                .sorted(Comparator.comparing(i -> i.getOrden() == null ? Integer.MAX_VALUE : i.getOrden()))
-                .map(i -> new ImagenPaqueteDTO(i.getId(), i.getUrl(), i.getOrden(), i.isPrincipal()))
-                .toList();
-
-        return new PaqueteDetalleDTO(
-                paquete.getId(),
-                paquete.getNombre(),
-                paquete.getSlug(),
-                paquete.getDescripcion(),
-                paquete.getDetalle(),
-                paquete.getDuracionDias(),
-                paquete.isDisponible(),
-                paquete.isDestacado(),
-                destinoDTO,
-                imagenes,
-                salidas
-        );
     }
 
     private List<ImagenPaquete> normalizarImagenes(Paquete paquete, List<ImagenPaqueteUpsertDTO> imagenesDTO) {
