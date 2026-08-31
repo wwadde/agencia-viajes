@@ -1,5 +1,8 @@
 package com.agencia.service;
 
+import com.agencia.config.mapper.DestinoMapper;
+import com.agencia.config.mapper.PaqueteMapper;
+import com.agencia.config.mapper.PaqueteMapperImpl;
 import com.agencia.domain.Destino;
 import com.agencia.domain.ImagenPaquete;
 import com.agencia.domain.Paquete;
@@ -10,13 +13,19 @@ import com.agencia.exception.RecursoNoEncontradoException;
 import com.agencia.exception.ReglaNegocioException;
 import com.agencia.repository.DestinoRepository;
 import com.agencia.repository.PaqueteRepository;
+import com.agencia.repository.SalidaRepository;
+import com.agencia.service.EventoOutboxService;
+import com.agencia.utils.TipoEntidadOutbox;
+import com.agencia.utils.TipoEventoOutbox;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,10 +33,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static tools.jackson.databind.node.JsonNodeFactory.instance;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -42,13 +53,39 @@ class PaqueteServiceTest {
     @Mock
     private DestinoRepository destinoRepository;
 
-    @InjectMocks
+    @Mock
+    private SalidaRepository salidaRepository;
+
+    @Mock
+    private EventoOutboxService eventoOutboxService;
+
+    private final DestinoMapper destinoMapper = Mappers.getMapper(DestinoMapper.class);
+    private final PaqueteMapper paqueteMapper = buildPaqueteMapper();
+
     private PaqueteService paqueteService;
+
+    @BeforeEach
+    void setUp() {
+        paqueteService = new PaqueteService(paqueteRepository, destinoRepository, salidaRepository, eventoOutboxService, paqueteMapper, destinoMapper);
+        org.mockito.Mockito.lenient().when(salidaRepository.findByPaqueteId(anyLong())).thenReturn(List.of());
+    }
+
+    private PaqueteMapper buildPaqueteMapper() {
+        PaqueteMapperImpl impl = new PaqueteMapperImpl();
+        try {
+            Field field = PaqueteMapperImpl.class.getDeclaredField("destinoMapper");
+            field.setAccessible(true);
+            field.set(impl, destinoMapper);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalStateException("No se pudo inyectar DestinoMapper en PaqueteMapper", e);
+        }
+        return impl;
+    }
 
     @Test
     void crear_debePersistirPaqueteConDestinoYSalidas() {
         Destino destino = Destino.builder().id(7L).nombre("Cartagena").build();
-        when(destinoRepository.findById(7L)).thenReturn(Optional.of(destino));
+        when(destinoRepository.findAllById(List.of(7L))).thenReturn(List.of(destino));
         when(paqueteRepository.findUsedSlugsByBase("caribe-premium", null)).thenReturn(List.of());
 
         Paquete persisted = Paquete.builder().id(11L).build();
@@ -58,11 +95,12 @@ class PaqueteServiceTest {
                 "Caribe Premium",
                 "caribe-premium",
                 "Plan de 5 dias",
+                instance.stringNode("Incluye vuelos y hotel"),
                 "Incluye vuelos y hotel",
                 5,
                 true,
                 true,
-                7L,
+                List.of(7L),
                 List.of(
                         new ImagenPaqueteUpsertDTO("paquetes/a.jpg", 0, true),
                         new ImagenPaqueteUpsertDTO("paquetes/b.jpg", 1, false)
@@ -80,7 +118,7 @@ class PaqueteServiceTest {
         Paquete paqueteGuardado = captor.getValue();
         assertEquals("Caribe Premium", paqueteGuardado.getNombre());
         assertEquals("caribe-premium", paqueteGuardado.getSlug());
-        assertEquals(destino, paqueteGuardado.getDestino());
+        assertEquals(List.of(destino), paqueteGuardado.getDestinos());
         assertEquals(2, paqueteGuardado.getImagenes().size());
         assertEquals("paquetes/b.jpg", paqueteGuardado.getImagenes().get(1).getUrl());
         assertEquals(0, paqueteGuardado.getImagenes().get(0).getOrden());
@@ -92,7 +130,7 @@ class PaqueteServiceTest {
     @Test
     void crear_debeResolverSlugConUnaSolaConsulta() {
         Destino destino = Destino.builder().id(9L).nombre("Cusco").build();
-        when(destinoRepository.findById(9L)).thenReturn(Optional.of(destino));
+        when(destinoRepository.findAllById(List.of(9L))).thenReturn(List.of(destino));
         when(paqueteRepository.findUsedSlugsByBase("machu-picchu", null))
                 .thenReturn(List.of("machu-picchu", "machu-picchu-2"));
         when(paqueteRepository.save(any(Paquete.class))).thenReturn(Paquete.builder().id(31L).build());
@@ -101,11 +139,12 @@ class PaqueteServiceTest {
                 "Machu Picchu",
                 "machu-picchu",
                 "Descripcion",
+                instance.stringNode("Detalle"),
                 "Detalle",
                 6,
                 true,
                 true,
-                9L,
+                List.of(9L),
                 List.of(new ImagenPaqueteUpsertDTO("paquetes/a.jpg", 0, true)),
                 List.of(new SalidaUpsertDTO(LocalDate.now().plusDays(10), BigDecimal.valueOf(1800), 20))
         );
@@ -123,7 +162,7 @@ class PaqueteServiceTest {
         @Test
         void crear_debeNormalizarTildesYEnieEnSlug() {
                 Destino destino = Destino.builder().id(12L).nombre("Chile").build();
-                when(destinoRepository.findById(12L)).thenReturn(Optional.of(destino));
+                when(destinoRepository.findAllById(List.of(12L))).thenReturn(List.of(destino));
                 when(paqueteRepository.findUsedSlugsByBase("aventura-en-canon-del-nuble", null)).thenReturn(List.of());
                 when(paqueteRepository.save(any(Paquete.class))).thenReturn(Paquete.builder().id(55L).build());
 
@@ -131,11 +170,12 @@ class PaqueteServiceTest {
                                 "Aventura en Cañón del Ñuble",
                                 "",
                                 "Descripcion",
+                        instance.stringNode("Detalle"),
                                 "Detalle",
                                 4,
                                 true,
                                 false,
-                                12L,
+                                List.of(12L),
                                 List.of(new ImagenPaqueteUpsertDTO("paquetes/nuble.jpg", 0, true)),
                                 List.of()
                 );
@@ -158,18 +198,19 @@ class PaqueteServiceTest {
                 .build();
         Destino destino = Destino.builder().id(3L).nombre("Santa Marta").build();
         when(paqueteRepository.findDetalleBaseById(40L)).thenReturn(Optional.of(paquete));
-        when(destinoRepository.findById(3L)).thenReturn(Optional.of(destino));
+        when(destinoRepository.findAllById(List.of(3L))).thenReturn(List.of(destino));
         when(paqueteRepository.findUsedSlugsByBase("plan-caribe", 40L)).thenReturn(List.of());
 
         PaqueteUpsertDTO dto = new PaqueteUpsertDTO(
                 "Plan Caribe",
                 "plan-caribe",
                 "Descripcion",
+                instance.stringNode("Detalle"),
                 "Detalle",
                 4,
                 true,
                 false,
-                3L,
+                List.of(3L),
                 null,
                 List.of()
         );
@@ -179,6 +220,17 @@ class PaqueteServiceTest {
         assertEquals("paquetes/existente.jpg", paquete.getImagenes().getFirst().getUrl());
         assertNotNull(paquete.getUltimaModificacion());
     }
+
+        @Test
+        void eliminar_debeBorrarElPaqueteEncontrado() {
+                Paquete paquete = Paquete.builder().id(40L).build();
+                when(paqueteRepository.findDetalleBaseById(40L)).thenReturn(Optional.of(paquete));
+
+                paqueteService.eliminar(40L);
+
+                verify(eventoOutboxService).registrar(TipoEntidadOutbox.PAQUETE, 40L, TipoEventoOutbox.ELIMINADO);
+                verify(paqueteRepository).delete(paquete);
+        }
 
     @Test
     void actualizar_conImagenes_debeReemplazarColeccionYMantenerUnaPrincipal() {
@@ -193,18 +245,19 @@ class PaqueteServiceTest {
         LocalDateTime fechaAnterior = paquete.getUltimaModificacion();
         Destino destino = Destino.builder().id(5L).nombre("Lima").build();
         when(paqueteRepository.findDetalleBaseById(41L)).thenReturn(Optional.of(paquete));
-        when(destinoRepository.findById(5L)).thenReturn(Optional.of(destino));
+        when(destinoRepository.findAllById(List.of(5L))).thenReturn(List.of(destino));
         when(paqueteRepository.findUsedSlugsByBase("lima-escape", 41L)).thenReturn(List.of());
 
         PaqueteUpsertDTO dto = new PaqueteUpsertDTO(
                 "Lima Escape",
                 "lima-escape",
                 "Descripcion",
+                instance.stringNode("Detalle"),
                 "Detalle",
                 3,
                 true,
                 false,
-                5L,
+                List.of(5L),
                 List.of(
                         new ImagenPaqueteUpsertDTO("paquetes/nueva-a.jpg", 0, false),
                         new ImagenPaqueteUpsertDTO("paquetes/nueva-b.jpg", 1, true)
@@ -237,7 +290,7 @@ class PaqueteServiceTest {
                 .slug("cartagena-premium")
                 .nombre("Cartagena Premium")
                 .descripcion("Desc")
-                .detalle("Det")
+                .detalle(instance.stringNode("Det"))
                 .duracionDias(5)
                 .disponible(true)
                 .destacado(true)

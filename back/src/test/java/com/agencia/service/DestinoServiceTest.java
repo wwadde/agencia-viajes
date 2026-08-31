@@ -1,13 +1,15 @@
 package com.agencia.service;
 
+import com.agencia.config.mapper.DestinoMapper;
 import com.agencia.domain.Destino;
 import com.agencia.domain.dto.DestinoDTO;
 import com.agencia.exception.RecursoNoEncontradoException;
 import com.agencia.repository.DestinoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,8 +28,14 @@ class DestinoServiceTest {
     @Mock
     private DestinoRepository destinoRepository;
 
-    @InjectMocks
+    private final DestinoMapper destinoMapper = Mappers.getMapper(DestinoMapper.class);
+
     private DestinoService destinoService;
+
+    @BeforeEach
+    void setUp() {
+        destinoService = new DestinoService(destinoRepository, destinoMapper);
+    }
 
     @Test
     void crear_debePersistirCamposNormalizados() {

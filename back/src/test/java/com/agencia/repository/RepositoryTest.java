@@ -13,8 +13,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static tools.jackson.databind.node.JsonNodeFactory.instance;
 
 @Testcontainers
 @DataJpaTest
@@ -37,17 +39,19 @@ class RepositoryTest {
                 .nombre("Destino de prueba")
                 .ciudad("Ciudad de prueba")
                 .pais("País de prueba")
+                .latitud(10.0)
+                .longitud(-75.0)
                 .build();
 
         Paquete paquete = Paquete.builder()
                 .descripcion("Paquete de prueba")
-                .detalle("Detalle del paquete de prueba")
+                .detalle(instance.textNode("Detalle del paquete de prueba"))
                 .nombre("Paquete de prueba")
-                .slug("paquete-de-prueba")
+                .slug("paquete-de-prueba-" + System.nanoTime())
                 .duracionDias(8)
                 .disponible(true)
                 .ultimaModificacion(LocalDateTime.now())
-                .destino(destinoRepository.save(destino))
+                .destinos(new java.util.ArrayList<>(List.of(destinoRepository.save(destino))))
                 .build();
         paqueteRepository.save(paquete);
 
@@ -61,7 +65,7 @@ class RepositoryTest {
 
     @Test
     void retornaPaquete(){
-        Paquete paquete = paqueteRepository.findById(1L).orElse(null);
+        Paquete paquete = paqueteRepository.findByNombre("Paquete de prueba").orElse(null);
         assertThat(paquete).isNotNull();
         assertThat(paquete.getNombre()).isEqualTo("Paquete de prueba");
     }
