@@ -138,11 +138,11 @@ export class LeafletMapComponent implements OnDestroy {
     validLocations.forEach((location, index) => {
       const marker = this.leaflet!
         .marker([location.latitude, location.longitude], {
-          icon: this.leaflet!.divIcon({
-            className: 'leaflet-route-marker',
-            html: `<span>${index + 1}</span>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
+          icon: this.leaflet!.icon({
+            iconUrl: '/marker.svg',
+            iconSize: [42, 42],
+            iconAnchor: [21, 42],
+            popupAnchor: [0, -38],
           }),
           draggable: false,
         })
