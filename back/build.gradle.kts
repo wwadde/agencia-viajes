@@ -1,6 +1,6 @@
 plugins {
 	java
-	id("org.springframework.boot") version "4.0.3"
+	id("org.springframework.boot") version "4.1.0"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -46,7 +46,7 @@ dependencies {
 	implementation("org.springframework.ai:spring-ai-rag")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
-	implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.21.0-alpha")
+	implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.30.0-alpha")
 	implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
 	implementation("org.springframework.ai:spring-ai-starter-model-google-genai-embedding")
 
@@ -77,6 +77,8 @@ dependencies {
 dependencyManagement {
 	imports {
 		mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+		mavenBom("io.opentelemetry:opentelemetry-bom:1.62.0")
+		mavenBom("io.opentelemetry:opentelemetry-bom-alpha:1.62.0-alpha")
 	}
 }
 
