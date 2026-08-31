@@ -44,13 +44,12 @@ export class AdminDestinoService {
         }
     }
 
-    async createDestino(data: DestinoUpsertDTO): Promise<DestinoDTO | null> {
+    async createDestino(data: DestinoUpsertDTO): Promise<void> {
         this._loading.set(true);
         this._error.set(null);
         try {
-            const dest = await firstValueFrom(this.http.post<DestinoDTO>(this.baseUrl, data));
+            await firstValueFrom(this.http.post<void>(this.baseUrl, data));
             await this.loadDestinos(); // recargar
-            return dest;
         } catch (e) {
             this.handleError(e, 'Error al crear destino');
             throw e;
@@ -59,13 +58,12 @@ export class AdminDestinoService {
         }
     }
 
-    async updateDestino(id: number, data: DestinoUpsertDTO): Promise<DestinoDTO | null> {
+    async updateDestino(id: number, data: DestinoUpsertDTO): Promise<void> {
         this._loading.set(true);
         this._error.set(null);
         try {
-            const dest = await firstValueFrom(this.http.put<DestinoDTO>(`${this.baseUrl}/${id}`, data));
+            await firstValueFrom(this.http.put<void>(`${this.baseUrl}/${id}`, data));
             await this.loadDestinos(); // recargar
-            return dest;
         } catch (e) {
             this.handleError(e, 'Error al actualizar destino');
             throw e;

@@ -25,11 +25,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/login/login.component')
     },
     {
-        path: 'register',
-        canActivate: [unauthGuard],
-        loadComponent: () => import('./features/auth/register/register.component')
-    },
-    {
         path: 'auth/google/callback',
         loadComponent: () => import('./features/auth/google-callback/google-callback.component')
     },

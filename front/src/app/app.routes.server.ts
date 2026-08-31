@@ -18,10 +18,6 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
-    path: 'register',
-    renderMode: RenderMode.Client
-  },
-  {
     path: 'auth/google/callback',
     renderMode: RenderMode.Client
   },

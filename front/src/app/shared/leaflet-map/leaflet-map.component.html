@@ -1,5 +1,15 @@
-@if (interactive() || hasCoordinates()) {
-  <div #mapElement class="leaflet-map" [attr.aria-label]="interactive() ? 'Mapa para seleccionar la ubicacion' : 'Mapa de ubicacion'" role="application"></div>
+@if (interactive() || hasCoordinates() || locations().length > 0) {
+  <div class="leaflet-map-shell">
+    <div #mapElement class="leaflet-map" [attr.aria-label]="interactive() ? 'Mapa para seleccionar la ubicacion' : 'Mapa de ubicacion'" role="application"></div>
+    @if (locations().length > 1) {
+      <div class="leaflet-map-legend" aria-label="Leyenda de la ruta">
+        <span class="leaflet-map-legend__title">Ruta del viaje</span>
+        @for (location of locations(); track $index) {
+          <span class="leaflet-map-legend__item"><b>{{ $index + 1 }}</b>{{ location.label || 'Parada ' + ($index + 1) }}</span>
+        }
+      </div>
+    }
+  </div>
 } @else {
   <div class="leaflet-map-empty" role="status">Este destino aun no tiene coordenadas.</div>
 }

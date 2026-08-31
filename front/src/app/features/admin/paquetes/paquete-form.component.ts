@@ -1,18 +1,27 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { generateText, JSONContent } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
 import { AdminPaqueteService } from '../../../core/services/admin-paquete.service';
 import { AdminDestinoService } from '../../../core/services/admin-destino.service';
 import { ImagenSelectorComponent } from '../imagenes/imagen-selector.component';
 import { ImagenUrlPipe } from '../../../core/pipes/imagen-url.pipe';
 import { DestinoDTO } from '../../../core/models/destino.model';
-import { PaqueteDetalleDTO, PaqueteUpsertDTO, ImagenPaqueteUpsertDTO } from '../../../core/models/paquete.model';
+import {
+  ImagenPaqueteUpsertDTO,
+  PaqueteDetalleContent,
+  PaqueteUpsertDTO
+} from '../../../core/models/paquete.model';
+import { ProblemDetail } from '../../../core/models/error.model';
+import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
 
 @Component({
   selector: 'app-paquete-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ImagenSelectorComponent, ImagenUrlPipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ImagenSelectorComponent, ImagenUrlPipe, RichTextEditorComponent],
   template: `
     <div class="max-w-4xl mx-auto space-y-8 pb-12">
       <!-- Header -->
@@ -71,13 +80,41 @@ import { PaqueteDetalleDTO, PaqueteUpsertDTO, ImagenPaqueteUpsertDTO } from '../
               </div>
 
               <div class="sm:col-span-2">
-                <label class="block text-sm font-medium text-[var(--color-muted)] mb-1.5">Destino Asociado <span class="text-red-500">*</span></label>
-                <select formControlName="destinoId" class="w-full bg-white border border-[var(--color-sea-strong)]/35 rounded-xl px-4 py-3 text-[var(--color-night)] focus:ring-2 focus:ring-[var(--color-ink)] focus:border-[var(--color-ink)] outline-none transition-all cursor-pointer">
-                  <option [ngValue]="null" disabled>Selecciona un destino...</option>
-                  @for (dest of destinoService.destinos(); track dest.id) {
-                    <option [ngValue]="dest.id">{{ dest.nombre }} ({{ dest.pais }})</option>
+                <div class="flex items-center justify-between gap-3 mb-1.5">
+                  <label class="block text-sm font-medium text-[var(--color-muted)]">Ruta del paquete <span class="text-red-500">*</span></label>
+                  <span class="text-xs text-[var(--color-muted-soft)]">{{ selectedDestinoIds().length }} destinos</span>
+                </div>
+                <div class="rounded-2xl border border-[var(--color-sea-strong)]/35 bg-[var(--color-sea)]/20 p-3 space-y-2">
+                  @for (dest of selectedDestinos(); track dest.id; let index = $index) {
+                    <div class="flex items-center gap-3 rounded-xl bg-white border border-[var(--color-sea-strong)]/30 px-3 py-2">
+                      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] text-xs font-bold text-white">{{ index + 1 }}</span>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-semibold text-[var(--color-night)]">{{ dest.nombre }}</p>
+                        <p class="truncate text-xs text-[var(--color-muted-soft)]">{{ dest.ciudad }}, {{ dest.pais }}</p>
+                      </div>
+                      <button type="button" (click)="moveDestino(index, -1)" [disabled]="index === 0" class="p-1.5 text-[var(--color-muted)] disabled:opacity-30" title="Subir destino" aria-label="Subir destino">↑</button>
+                      <button type="button" (click)="moveDestino(index, 1)" [disabled]="index === selectedDestinos().length - 1" class="p-1.5 text-[var(--color-muted)] disabled:opacity-30" title="Bajar destino" aria-label="Bajar destino">↓</button>
+                      <button type="button" (click)="removeDestino(dest.id)" class="p-1.5 text-red-500" title="Quitar destino" aria-label="Quitar destino">×</button>
+                    </div>
+                  } @empty {
+                    <p class="px-2 py-1 text-sm text-[var(--color-muted-soft)]">Selecciona los lugares que formarán el recorrido.</p>
                   }
-                </select>
+                </div>
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                  <input type="search" [value]="destinoSearch()" (input)="destinoSearch.set($any($event.target).value)" placeholder="Buscar por nombre, ciudad o país..." aria-label="Buscar destinos" class="sm:col-span-2 w-full bg-white border border-[var(--color-sea-strong)]/35 rounded-xl px-3 py-2.5 text-sm text-[var(--color-night)] outline-none focus:ring-2 focus:ring-[var(--color-ink)]" />
+                  @for (dest of filteredDestinos(); track dest.id) {
+                    <label class="flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 transition-colors"
+                           [class.border-[var(--color-ink)]]="isDestinoSelected(dest.id)"
+                           [class.bg-[var(--color-sea)]]="isDestinoSelected(dest.id)"
+                           [class.border-[var(--color-sea-strong)]/35]="!isDestinoSelected(dest.id)">
+                      <input type="checkbox" [checked]="isDestinoSelected(dest.id)" (change)="toggleDestino(dest.id, $any($event.target).checked)" class="h-4 w-4 accent-[var(--color-ink)]" />
+                      <span class="min-w-0"><span class="block truncate text-sm font-medium text-[var(--color-night)]">{{ dest.nombre }}</span><span class="block truncate text-xs text-[var(--color-muted-soft)]">{{ dest.ciudad }}, {{ dest.pais }}</span></span>
+                    </label>
+                  }
+                  @empty {
+                    <p class="sm:col-span-2 px-2 py-3 text-sm text-[var(--color-muted-soft)]">No hay destinos que coincidan con la búsqueda.</p>
+                  }
+                </div>
               </div>
 
               <div class="sm:col-span-2">
@@ -89,9 +126,7 @@ import { PaqueteDetalleDTO, PaqueteUpsertDTO, ImagenPaqueteUpsertDTO } from '../
 
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-[var(--color-muted)] mb-1.5">Detalle Completo <span class="text-red-500">*</span></label>
-                <textarea formControlName="detalle" rows="6"
-                          class="w-full bg-white border border-[var(--color-sea-strong)]/35 rounded-xl px-4 py-3 text-[var(--color-night)] focus:ring-2 focus:ring-[var(--color-ink)] focus:border-[var(--color-ink)] outline-none transition-all resize-y" 
-                          placeholder="Itinerario, qué incluye, políticas, etc..."></textarea>
+                <app-rich-text-editor formControlName="detalle"></app-rich-text-editor>
               </div>
             </div>
           </div>
@@ -220,9 +255,31 @@ focus:ring-blue-600 focus:ring-offset-neutral-900" />
       (close)="selectorOpen.set(false)" 
       (selectImage)="onImageSelected($event)">
     </app-imagen-selector>
+
+    @if (alertError()) {
+      <div class="fixed top-6 right-6 z-[70] w-full max-w-sm rounded-2xl border border-red-500/40 bg-red-900/95 p-4 shadow-2xl shadow-red-900/45">
+        <div class="flex items-start gap-3">
+          <svg class="h-6 w-6 flex-shrink-0 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="flex-1">
+            <h4 class="text-sm font-bold text-white">No se pudo guardar el paquete</h4>
+            <p class="mt-1 text-xs text-red-100">{{ alertError() }}</p>
+          </div>
+          <button
+            type="button"
+            (click)="clearAlertError()"
+            class="text-red-200 transition-colors hover:text-white"
+            aria-label="Cerrar alerta"
+            title="Cerrar alerta">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      </div>
+    }
   `
 })
-export default class PaqueteFormComponent implements OnInit {
+export default class PaqueteFormComponent implements OnInit, OnDestroy {
   paqueteService = inject(AdminPaqueteService);
   destinoService = inject(AdminDestinoService);
   fb = inject(FormBuilder);
@@ -233,6 +290,21 @@ export default class PaqueteFormComponent implements OnInit {
   paqueteId = signal<number | null>(null);
   isSaving = signal(false);
   saveError = signal<string | null>(null);
+  alertError = signal<string | null>(null);
+  private alertTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  selectedDestinoIds = signal<number[]>([]);
+  destinoSearch = signal('');
+  filteredDestinos = computed(() => {
+    const query = this.destinoSearch().trim().toLowerCase();
+    if (!query) {
+      return this.destinoService.destinos();
+    }
+    return this.destinoService.destinos().filter(destino =>
+      `${destino.nombre} ${destino.ciudad} ${destino.pais}`.toLowerCase().includes(query));
+  });
+  selectedDestinos = computed(() => this.selectedDestinoIds()
+    .map(id => this.destinoService.destinos().find(destino => destino.id === id))
+    .filter((destino): destino is DestinoDTO => Boolean(destino)));
 
   // Selector state
   selectorOpen = signal(false);
@@ -242,11 +314,11 @@ export default class PaqueteFormComponent implements OnInit {
     nombre: ['', Validators.required],
     slug: [''], // Auto-generated
     descripcion: ['', Validators.required],
-    detalle: ['', Validators.required],
+    detalle: [this.emptyDetalle(), Validators.required],
     duracionDias: [1, [Validators.required, Validators.min(1)]],
     disponible: [true],
     destacado: [false],
-    destinoId: [null, Validators.required],
+    destinoIds: [[], Validators.required],
     imagenes: this.fb.array([])
   });
 
@@ -270,6 +342,10 @@ export default class PaqueteFormComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.clearAlertError();
+  }
+
   async loadPaquete(id: number) {
     const paq = await this.paqueteService.getPaquete(id);
     if (paq) {
@@ -277,12 +353,13 @@ export default class PaqueteFormComponent implements OnInit {
         nombre: paq.nombre,
         slug: paq.slug,
         descripcion: paq.descripcion,
-        detalle: paq.detalle,
+        detalle: this.normalizeDetalle(paq.detalle),
         duracionDias: paq.duracionDias,
         disponible: paq.disponible,
         destacado: paq.destacado,
-        destinoId: paq.destino.id
+        destinoIds: (paq.destinos?.length ? paq.destinos : [paq.destino]).map(destino => destino.id)
       });
+      this.selectedDestinoIds.set(this.form.get('destinoIds')?.value ?? []);
 
       // Populate form array
       if (paq.imagenes && paq.imagenes.length > 0) {
@@ -323,6 +400,33 @@ export default class PaqueteFormComponent implements OnInit {
     for (let i = 0; i < this.imagenesArr.length; i++) {
       this.imagenesArr.at(i).get('principal')?.setValue(i === index);
     }
+  }
+
+  isDestinoSelected(id: number): boolean {
+    return this.selectedDestinoIds().includes(id);
+  }
+
+  toggleDestino(id: number, selected: boolean): void {
+    const ids = this.selectedDestinoIds();
+    const next = selected ? [...ids, id] : ids.filter(existingId => existingId !== id);
+    this.selectedDestinoIds.set(next);
+    this.form.get('destinoIds')?.setValue(next);
+    this.form.get('destinoIds')?.markAsTouched();
+  }
+
+  removeDestino(id: number): void {
+    this.toggleDestino(id, false);
+  }
+
+  moveDestino(index: number, offset: number): void {
+    const next = [...this.selectedDestinoIds()];
+    const target = index + offset;
+    if (target < 0 || target >= next.length) {
+      return;
+    }
+    [next[index], next[target]] = [next[target], next[index]];
+    this.selectedDestinoIds.set(next);
+    this.form.get('destinoIds')?.setValue(next);
   }
 
   hasPrincipalImage(): boolean {
@@ -369,9 +473,15 @@ export default class PaqueteFormComponent implements OnInit {
     
     this.isSaving.set(true);
     this.saveError.set(null);
+    this.clearAlertError();
 
+    const value = this.form.getRawValue();
     const data: PaqueteUpsertDTO = {
-      ...this.form.value
+      ...value,
+      detalle: this.normalizeDetalle(value.detalle as PaqueteDetalleContent),
+        detalleTextoPlano: this.extractPlainText(value.detalle as PaqueteDetalleContent),
+        destinoIds: value.destinoIds as number[],
+      imagenes: value.imagenes as ImagenPaqueteUpsertDTO[]
     };
 
     try {
@@ -382,10 +492,113 @@ export default class PaqueteFormComponent implements OnInit {
       }
       this.router.navigate(['/admin/paquetes']);
     } catch (e) {
-      this.saveError.set('No se pudo guardar el paquete. Verifica los datos.');
+      const message = this.extractProblemMessage(e, 'No se pudo guardar el paquete. Verifica los datos.');
+      this.saveError.set(message);
+      this.showAlertError(message);
     } finally {
       this.isSaving.set(false);
     }
   }
-}
 
+  private showAlertError(message: string): void {
+    this.alertError.set(message);
+    if (this.alertTimeoutId !== null) {
+      clearTimeout(this.alertTimeoutId);
+    }
+    this.alertTimeoutId = setTimeout(() => {
+      this.alertError.set(null);
+      this.alertTimeoutId = null;
+    }, 6000);
+  }
+
+  clearAlertError(): void {
+    this.alertError.set(null);
+    if (this.alertTimeoutId !== null) {
+      clearTimeout(this.alertTimeoutId);
+      this.alertTimeoutId = null;
+    }
+  }
+
+  private extractProblemMessage(error: unknown, fallbackMessage: string): string {
+    if (error instanceof HttpErrorResponse) {
+      const problem = error.error as ProblemDetail | null;
+      const violationMessage = problem?.violations
+        ?.map(v => v?.mensaje?.trim())
+        .find((mensaje): mensaje is string => Boolean(mensaje));
+      if (violationMessage) {
+        return violationMessage;
+      }
+      if (problem?.detail?.trim()) {
+        return problem.detail.trim();
+      }
+      if (typeof error.error === 'string' && error.error.trim()) {
+        return error.error.trim();
+      }
+    }
+    return fallbackMessage;
+  }
+
+  private normalizeDetalle(detalle: PaqueteDetalleContent): JSONContent {
+    if (this.isJsonContent(detalle)) {
+      return detalle;
+    }
+
+    if (typeof detalle === 'string') {
+      const trimmed = detalle.trim();
+      if (!trimmed) {
+        return this.emptyDetalle();
+      }
+
+      const parsed = this.tryParseJsonContent(trimmed);
+      if (parsed) {
+        return parsed;
+      }
+
+      return {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: trimmed }]
+          }
+        ]
+      };
+    }
+
+    return this.emptyDetalle();
+  }
+
+  private tryParseJsonContent(value: string): JSONContent | null {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return this.isJsonContent(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private isJsonContent(value: unknown): value is JSONContent {
+    if (typeof value !== 'object' || value === null) {
+      return false;
+    }
+    const withType = value as { type?: unknown };
+    return typeof withType.type === 'string';
+  }
+
+  private extractPlainText(detalle: PaqueteDetalleContent): string {
+    if (!this.isJsonContent(detalle)) {
+      return '';
+    }
+    return generateText(detalle, [StarterKit])
+      .replace(/[ \t]+/g, ' ')
+      .replace(/ *\n */g, '\n')
+      .trim();
+  }
+
+  private emptyDetalle(): JSONContent {
+    return {
+      type: 'doc',
+      content: [{ type: 'paragraph' }]
+    };
+  }
+}

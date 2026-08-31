@@ -3,11 +3,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { AdminDestinoService } from '../../../core/services/admin-destino.service';
 import { DestinoDTO } from '../../../core/models/destino.model';
+import { LeafletMapComponent, MapLocation } from '../../../shared/leaflet-map/leaflet-map.component';
 
 @Component({
   selector: 'app-destino-list',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LeafletMapComponent],
   template: `
     <div class="space-y-8">
       <!-- Header -->
@@ -122,6 +122,30 @@ import { DestinoDTO } from '../../../core/models/destino.model';
                       <input type="text" formControlName="ciudad" class="w-full bg-white border border-[var(--color-sea-strong)]/35 rounded-xl px-4 py-2.5 text-[var(--color-night)] focus:ring-2 focus:ring-[var(--color-ink)] focus:border-[var(--color-ink)] outline-none transition-all" placeholder="Ej: Cancún, Isla Mujeres..." />
                     </div>
 
+                    <fieldset class="space-y-3 border-t border-[var(--color-sea-strong)]/35 pt-5">
+                      <legend class="text-sm font-semibold text-[var(--color-night)]">Ubicación</legend>
+                      <p class="text-xs text-[var(--color-muted)]">Haz clic en el mapa para seleccionar la ubicación del destino.</p>
+                      <app-leaflet-map
+                        [latitude]="form.controls['latitud'].value"
+                        [longitude]="form.controls['longitud'].value"
+                        [interactive]="true"
+                        (locationSelected)="onLocationSelected($event)"
+                      />
+                      <div class="grid grid-cols-2 gap-3">
+                        <label class="text-xs text-[var(--color-muted)]">
+                          Latitud
+                          <input type="number" formControlName="latitud" min="-90" max="90" step="any" class="mt-1 w-full bg-white border border-[var(--color-sea-strong)]/35 rounded-lg px-3 py-2 text-sm text-[var(--color-night)]" />
+                        </label>
+                        <label class="text-xs text-[var(--color-muted)]">
+                          Longitud
+                          <input type="number" formControlName="longitud" min="-180" max="180" step="any" class="mt-1 w-full bg-white border border-[var(--color-sea-strong)]/35 rounded-lg px-3 py-2 text-sm text-[var(--color-night)]" />
+                        </label>
+                      </div>
+                      @if (form.controls['latitud'].invalid || form.controls['longitud'].invalid) {
+                        <p class="text-xs text-red-600">La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.</p>
+                      }
+                    </fieldset>
+
                     <div class="pt-6 border-t border-[var(--color-sea-strong)]/35 mt-8 flex flex-col sm:flex-row gap-3">
                       <button type="button" (click)="closeForm()" class="flex-1 px-4 py-2.5 bg-transparent border border-[var(--color-sea-strong)]/45 hover:border-[var(--color-sea-strong)]/800 text-[var(--color-muted)] hover:text-[var(--color-night)] font-medium rounded-xl transition-colors">
                         Cancelar
@@ -154,7 +178,9 @@ export default class DestinoListComponent implements OnInit {
   form: FormGroup = this.fb.group({
     nombre: ['', Validators.required],
     pais: ['', Validators.required],
-    ciudad: ['', Validators.required]
+    ciudad: ['', Validators.required],
+    latitud: [null, [Validators.min(-90), Validators.max(90)]],
+    longitud: [null, [Validators.min(-180), Validators.max(180)]]
   });
 
   ngOnInit() {
@@ -168,13 +194,22 @@ export default class DestinoListComponent implements OnInit {
       this.form.patchValue({
         nombre: destino.nombre,
         pais: destino.pais,
-        ciudad: destino.ciudad
+        ciudad: destino.ciudad,
+        latitud: destino.latitud,
+        longitud: destino.longitud
       });
     } else {
       this.editingId.set(null);
       this.form.reset();
     }
     this.showForm.set(true);
+  }
+
+  onLocationSelected(location: MapLocation) {
+    this.form.patchValue({
+      latitud: Number(location.latitude.toFixed(6)),
+      longitud: Number(location.longitude.toFixed(6))
+    });
   }
 
   closeForm() {
@@ -187,7 +222,7 @@ export default class DestinoListComponent implements OnInit {
 
     try {
       const id = this.editingId();
-      if (id) {
+      if (id !== null) {
         await this.destinoService.updateDestino(id, this.form.value);
       } else {
         await this.destinoService.createDestino(this.form.value);

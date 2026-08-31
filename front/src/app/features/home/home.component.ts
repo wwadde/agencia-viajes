@@ -48,9 +48,6 @@ import { ChatComponent } from '../chat/chat.component';
                 <a routerLink="/login" class="px-4 py-2 text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors">
                   Iniciar sesión
                 </a>
-                <a routerLink="/register" class="px-4 py-2 text-sm font-semibold text-[var(--color-ink)] bg-[var(--color-rose)]/55 hover:bg-[var(--color-rose)]/80 rounded-lg transition-all border border-[var(--color-rose)]/70 hover:-translate-y-0.5">
-                  Registrarse
-                </a>
               }
             </div>
           </div>
@@ -103,14 +100,6 @@ import { ChatComponent } from '../chat/chat.component';
             </a>
           </div>
 
-          <div class="hidden lg:flex ml-auto w-[320px] rounded-[1.8rem] border border-white/25 bg-white/12 backdrop-blur-md p-6 text-white shadow-2xl animate-float-soft">
-            <div>
-              <p class="text-xs uppercase tracking-[0.2em] text-white/75">Siguiente salida destacada</p>
-              <p class="mt-4 text-2xl font-bold leading-tight">Cartagena + Islas del Rosario</p>
-              <p class="mt-2 text-sm text-white/80">7 días de mar, ciudad histórica y gastronomía local.</p>
-              <a href="#paquetes" class="mt-5 inline-flex text-sm font-semibold text-[var(--color-sea)] hover:text-[var(--color-sea-strong)] transition-colors">Ver itinerario</a>
-            </div>
-          </div>
         </div>
 
         @if (homeService.landingSlides().length > 1) {

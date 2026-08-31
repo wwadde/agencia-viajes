@@ -1,4 +1,5 @@
 import type { DestinoDTO } from './destino.model';
+import type { JSONContent } from '@tiptap/core';
 
 // ── Public read DTOs ────────────────────────────────────────────────
 
@@ -18,14 +19,18 @@ export interface PaqueteDetalleDTO {
     nombre: string;
     slug: string;
     descripcion: string;
-    detalle: string;
+    detalle: PaqueteDetalleContent;
+    detalleTextoPlano: string;
     duracionDias: number;
     disponible: boolean;
     destacado: boolean;
     destino: DestinoDTO;
+    destinos?: DestinoDTO[];
     imagenes: ImagenPaqueteDTO[];
     salidas: SalidaDTO[];
 }
+
+export type PaqueteDetalleContent = JSONContent | string | null;
 
 export interface ImagenPaqueteDTO {
     id: number;
@@ -47,11 +52,12 @@ export interface PaqueteUpsertDTO {
     nombre: string;
     slug?: string;
     descripcion: string;
-    detalle: string;
+    detalle: JSONContent;
+    detalleTextoPlano?: string;
     duracionDias: number;
     disponible: boolean;
     destacado: boolean;
-    destinoId: number;
+    destinoIds: number[];
     imagenes?: ImagenPaqueteUpsertDTO[];
     salidas?: SalidaUpsertDTO[];
 }

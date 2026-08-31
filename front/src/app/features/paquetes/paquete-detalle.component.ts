@@ -1,21 +1,26 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { generateHTML, JSONContent } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
 import { PaqueteService } from '../../core/services/paquete.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { ReservaService } from '../../core/services/reserva.service';
-import { PaqueteDetalleDTO, SalidaDTO } from '../../core/models/paquete.model';
+import { PaqueteDetalleContent, PaqueteDetalleDTO, SalidaDTO } from '../../core/models/paquete.model';
 import { ImagenUrlPipe } from '../../core/pipes/imagen-url.pipe';
 import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pipe';
+import { LeafletMapComponent } from '../../shared/leaflet-map/leaflet-map.component';
+import type { MapLocation } from '../../shared/leaflet-map/leaflet-map.component';
 
 @Component({
   selector: 'app-paquete-detalle',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, FormsModule, ImagenUrlPipe, ImagenMobileSrcsetPipe, NgOptimizedImage],
+  encapsulation: ViewEncapsulation.None,
+  imports: [CommonModule, RouterLink, FormsModule, ImagenUrlPipe, ImagenMobileSrcsetPipe, NgOptimizedImage, LeafletMapComponent],
   template: `
-    <div class="theme-shell min-h-screen text-[var(--color-ink)] flex flex-col">
+    <div class="theme-shell paquete-detalle-view min-h-screen text-[var(--color-ink)] flex flex-col">
       <!-- Navbar Simple -->
       <nav class="border-b border-white/40 bg-[var(--color-cloud)]/70 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,10 +99,26 @@ import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pi
                  </section>
 
                  <!-- Full Detail -->
-                 @if (p.detalle) {
+                 @if (detalleHtml()) {
                    <section class="bg-white/65 p-8 sm:p-10 rounded-3xl border border-white/80">
                      <h3 class="text-2xl font-bold text-[var(--color-ink)] tracking-tight mb-6">Detalles del itinerario</h3>
-                     <div class="text-[var(--color-muted)] whitespace-pre-wrap leading-relaxed">{{ p.detalle }}</div>
+                     <div class="detalle-richtext text-[var(--color-muted)] leading-relaxed" [innerHTML]="detalleHtml()"></div>
+                   </section>
+                 }
+
+                 @if (routeLocations().length > 0) {
+                   <section class="space-y-4">
+                     <div>
+                       <h2 class="text-3xl font-bold tracking-tight text-[var(--color-ink)]">Ubicación</h2>
+                       <p class="mt-2 text-[var(--color-muted)]">{{ p.destino.nombre }} · {{ p.destino.ciudad }}, {{ p.destino.pais }}</p>
+                     </div>
+                     <app-leaflet-map
+                       class="block h-[26rem] sm:h-[34rem] lg:h-[38rem] rounded-3xl overflow-hidden border border-white/80 shadow-2xl"
+                       [latitude]="p.destino.latitud"
+                       [longitude]="p.destino.longitud"
+                       [popupText]="p.destino.nombre + ' · ' + p.destino.ciudad + ', ' + p.destino.pais"
+                       [locations]="routeLocations()"
+                     />
                    </section>
                  }
                  
@@ -264,7 +285,52 @@ import { ImagenMobileSrcsetPipe } from '../../core/pipes/imagen-mobile-srcset.pi
         </div>
       </footer>
     </div>
-  `
+  `,
+  styles: [`
+    .paquete-detalle-view .detalle-richtext p {
+      margin: 0.75rem 0;
+    }
+
+    .paquete-detalle-view .detalle-richtext h2 {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+
+    .paquete-detalle-view .detalle-richtext h3 {
+      margin-top: 0.9rem;
+      margin-bottom: 0.45rem;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+
+    .paquete-detalle-view .detalle-richtext ul {
+      list-style: disc;
+      margin: 0.5rem 0 0.5rem 1.25rem;
+    }
+
+    .paquete-detalle-view .detalle-richtext ol {
+      list-style: decimal;
+      margin: 0.5rem 0 0.5rem 1.25rem;
+    }
+
+    .paquete-detalle-view .detalle-richtext blockquote {
+      margin: 0.75rem 0;
+      padding-left: 0.75rem;
+      border-left: 3px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+    }
+
+    .paquete-detalle-view .detalle-richtext strong {
+      font-weight: 700;
+    }
+
+    .paquete-detalle-view .detalle-richtext em {
+      font-style: italic;
+    }
+  `]
 })
 export default class PaqueteDetalleComponent implements OnInit {
   route = inject(ActivatedRoute);
@@ -275,6 +341,14 @@ export default class PaqueteDetalleComponent implements OnInit {
   reservaService = inject(ReservaService);
 
   paquete = signal<PaqueteDetalleDTO | null>(null);
+  routeLocations = computed<MapLocation[]>(() => (this.paquete()?.destinos ?? [])
+    .filter(destino => destino.latitud != null && destino.longitud != null)
+    .map(destino => ({
+      latitude: destino.latitud!,
+      longitude: destino.longitud!,
+      label: `${destino.nombre} · ${destino.ciudad}`,
+    })));
+  detalleHtml = signal<string | null>(null);
   loading = signal(true);
 
   reservaModalOpen = signal(false);
@@ -292,8 +366,10 @@ export default class PaqueteDetalleComponent implements OnInit {
       const result = await this.paqueteService.getPaqueteDetalle(slug);
       this.paquete.set(result);
       if (result) {
+        this.detalleHtml.set(this.renderDetalle(result.detalle));
         this.seo.setPackageSeo(result, slug);
       } else {
+        this.detalleHtml.set(null);
         this.seo.setPackageNotFoundSeo();
       }
     }
@@ -337,5 +413,54 @@ export default class PaqueteDetalleComponent implements OnInit {
       await this.router.navigate(['/mis-reservas']);
     }
   }
-}
 
+  private renderDetalle(detalle: PaqueteDetalleContent): string | null {
+    if (detalle == null) {
+      return null;
+    }
+
+    if (typeof detalle === 'string') {
+      const trimmed = detalle.trim();
+      if (!trimmed) {
+        return null;
+      }
+      const parsed = this.tryParseJsonContent(trimmed);
+      if (parsed) {
+        return generateHTML(parsed, [StarterKit]);
+      }
+      return `<p>${this.escapeHtml(trimmed)}</p>`;
+    }
+
+    if (this.isJsonContent(detalle)) {
+      return generateHTML(detalle, [StarterKit]);
+    }
+
+    return null;
+  }
+
+  private tryParseJsonContent(value: string): JSONContent | null {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return this.isJsonContent(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private isJsonContent(value: unknown): value is JSONContent {
+    if (typeof value !== 'object' || value === null) {
+      return false;
+    }
+    const withType = value as { type?: unknown };
+    return typeof withType.type === 'string';
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll('\'', '&#39;');
+  }
+}

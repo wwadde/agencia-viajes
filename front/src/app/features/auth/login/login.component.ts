@@ -25,12 +25,6 @@ import { LoginDTO } from '../../../core/models/auth.model';
         <h2 class="mt-6 text-center text-3xl font-extrabold text-[var(--color-ink)] tracking-tight">
           Bienvenido de nuevo
         </h2>
-        <p class="mt-2 text-center text-sm text-[var(--color-muted)]">
-          O
-          <a [routerLink]="['/register']" [queryParams]="{ returnUrl: route.snapshot.queryParams['returnUrl'] }" class="font-medium text-[var(--color-ink)] hover:text-[var(--color-night)] transition-colors underline underline-offset-2">
-            crea tu cuenta aquí
-          </a>
-        </p>
       </div>
 
       <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

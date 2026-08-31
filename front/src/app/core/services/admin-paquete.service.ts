@@ -95,10 +95,26 @@ export class AdminPaqueteService {
 
     private handleError(e: unknown, fallbackMessage: string) {
         if (e instanceof HttpErrorResponse) {
-            const problem = e.error as ProblemDetail | null;
-            this._error.set(problem?.detail ?? fallbackMessage);
+            this._error.set(this.extractProblemMessage(e, fallbackMessage));
         } else {
             this._error.set('Error de red o de servidor');
         }
+    }
+
+    private extractProblemMessage(error: HttpErrorResponse, fallbackMessage: string): string {
+        const problem = error.error as ProblemDetail | null;
+        const violationMessage = problem?.violations
+            ?.map(v => v?.mensaje?.trim())
+            .find((mensaje): mensaje is string => Boolean(mensaje));
+        if (violationMessage) {
+            return violationMessage;
+        }
+        if (problem?.detail?.trim()) {
+            return problem.detail.trim();
+        }
+        if (typeof error.error === 'string' && error.error.trim()) {
+            return error.error.trim();
+        }
+        return fallbackMessage;
     }
 }
