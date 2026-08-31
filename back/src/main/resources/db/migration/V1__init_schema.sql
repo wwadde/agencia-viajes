@@ -22,12 +22,20 @@ CREATE TABLE IF NOT EXISTS paquetes (
     nombre         VARCHAR(180) NOT NULL,
     slug           VARCHAR(240) NOT NULL UNIQUE,
     descripcion    VARCHAR(2000) NOT NULL,
-    detalle        VARCHAR(5000) NOT NULL,
+    detalle        JSONB,
+    detalle_texto_plano TEXT,
     duracion_dias  INTEGER NOT NULL,
     disponible     BOOLEAN NOT NULL DEFAULT FALSE,
     destacado      BOOLEAN NOT NULL DEFAULT FALSE,
-    ultima_modificacion TIMESTAMP,
-    destino_id     BIGINT NOT NULL REFERENCES destinos (id)
+    ultima_modificacion TIMESTAMP
+    );
+
+CREATE TABLE IF NOT EXISTS paquete_destinos (
+    paquete_id BIGINT NOT NULL REFERENCES paquetes (id) ON DELETE CASCADE,
+    destino_id BIGINT NOT NULL REFERENCES destinos (id) ON DELETE RESTRICT,
+    orden INTEGER NOT NULL,
+    PRIMARY KEY (paquete_id, destino_id),
+    UNIQUE (paquete_id, orden)
     );
 
 CREATE TABLE IF NOT EXISTS salidas (
@@ -77,7 +85,8 @@ CREATE TABLE IF NOT EXISTS reservas (
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_usuarios_correo ON usuarios (correo);
 
-CREATE INDEX IF NOT EXISTS idx_paquetes_destino_id ON paquetes (destino_id);
+CREATE INDEX IF NOT EXISTS idx_paquete_destinos_destino_id ON paquete_destinos (destino_id);
+CREATE INDEX IF NOT EXISTS idx_paquete_destinos_paquete_orden ON paquete_destinos (paquete_id, orden);
 CREATE INDEX IF NOT EXISTS idx_paquetes_disponible_destacado_nombre ON paquetes (disponible, destacado DESC, nombre);
 CREATE INDEX IF NOT EXISTS idx_paquetes_destacado_nombre ON paquetes (destacado DESC, nombre);
 
