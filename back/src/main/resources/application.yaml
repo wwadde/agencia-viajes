@@ -14,11 +14,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    #    show-sql: true
+    open-in-view: false
     properties:
       hibernate:
-    #        format_sql: true
-    open-in-view: false
+        type:
+          json_format_mapper: org.hibernate.type.format.jackson.Jackson3JsonFormatMapper
 
   config:
     import: optional:file:.env[.properties]
