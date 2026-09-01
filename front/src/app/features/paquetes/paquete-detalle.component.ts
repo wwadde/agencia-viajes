@@ -2,9 +2,8 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, computed, inject
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { generateHTML, JSONContent } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
 import { PaqueteService } from '../../core/services/paquete.service';
+import { renderDetalleHtml } from './detalle-renderer';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { ReservaService } from '../../core/services/reserva.service';
@@ -415,52 +414,6 @@ export default class PaqueteDetalleComponent implements OnInit {
   }
 
   private renderDetalle(detalle: PaqueteDetalleContent): string | null {
-    if (detalle == null) {
-      return null;
-    }
-
-    if (typeof detalle === 'string') {
-      const trimmed = detalle.trim();
-      if (!trimmed) {
-        return null;
-      }
-      const parsed = this.tryParseJsonContent(trimmed);
-      if (parsed) {
-        return generateHTML(parsed, [StarterKit]);
-      }
-      return `<p>${this.escapeHtml(trimmed)}</p>`;
-    }
-
-    if (this.isJsonContent(detalle)) {
-      return generateHTML(detalle, [StarterKit]);
-    }
-
-    return null;
-  }
-
-  private tryParseJsonContent(value: string): JSONContent | null {
-    try {
-      const parsed: unknown = JSON.parse(value);
-      return this.isJsonContent(parsed) ? parsed : null;
-    } catch {
-      return null;
-    }
-  }
-
-  private isJsonContent(value: unknown): value is JSONContent {
-    if (typeof value !== 'object' || value === null) {
-      return false;
-    }
-    const withType = value as { type?: unknown };
-    return typeof withType.type === 'string';
-  }
-
-  private escapeHtml(value: string): string {
-    return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll('\'', '&#39;');
+    return renderDetalleHtml(detalle);
   }
 }
