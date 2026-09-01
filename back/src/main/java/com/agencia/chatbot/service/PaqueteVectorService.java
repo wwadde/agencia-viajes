@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -66,15 +67,18 @@ public class PaqueteVectorService {
                 paquete.getId(),
                 paquete.getNombre(),
                 paquete.getDescripcion(),
-                paquete.getDetalle(),
-                paquete.getDestino().getNombre()
+                paquete.getDetalleTextoPlano(),
+                paquete.getDestinos().stream()
+                        .map(destino -> destino.getNombre() + " (" + destino.getCiudad() + ", " + destino.getPais() + ")")
+                        .collect(Collectors.joining(" -> "))
         );
 
         return new Document(contenido,
                 Map.of(
                         "tipo", TIPO_PAQUETE,
                         "paqueteId", paquete.getId().toString(),
-                        "destinoId", paquete.getDestino().getId().toString(),
+                        "destinoIds", paquete.getDestinos().stream().map(destino -> destino.getId().toString()).collect(Collectors.joining(",")),
+                        "destinosNombres", paquete.getDestinos().stream().map(destino -> destino.getNombre()).collect(Collectors.joining(" -> ")),
                         "duracionDias", paquete.getDuracionDias().toString()
                 )
         );
