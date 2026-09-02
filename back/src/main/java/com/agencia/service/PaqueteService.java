@@ -321,6 +321,20 @@ public class PaqueteService {
     }
 
     @Transactional(readOnly = true)
+    public List<DestinoDTO> buscarRuta(Long paqueteId) {
+        Paquete paquete = paqueteRepository.encontrarPaqueteConDestino(paqueteId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Paquete no encontrado: " + paqueteId));
+
+        if (paquete.getDestinos() == null || paquete.getDestinos().isEmpty()) {
+            return List.of();
+        }
+
+        return paquete.getDestinos().stream()
+                .map(destinoMapper::toDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<PaqueteResumenDTO> buscarPaquetes(
             String destino, String pais, Integer duracionMaxima,
             BigDecimal presupuestoMaximo, LocalDate fechaSalida, Integer personas

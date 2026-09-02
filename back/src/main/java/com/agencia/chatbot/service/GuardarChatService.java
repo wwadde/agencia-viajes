@@ -49,7 +49,7 @@ public class GuardarChatService {
                 mensajeSistema
         ));
 
-        conversacionRepository.actualizarFecha(conversacion.getId(), fecha);
+        conversacionRepository.actualizarMetadata(conversacion.getId(), fecha, conversacion.getMetadata());
     }
 
 

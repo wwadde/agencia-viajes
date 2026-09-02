@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,8 +25,12 @@ public interface ConversacionRepository extends JpaRepository<Conversacion, UUID
     Optional<Conversacion> findByIdAndUsuarioId(UUID id, Long usuarioId);
 
     @Modifying
-    @Query("UPDATE Conversacion c SET c.fechaActualizacion = :fecha WHERE c.id = :id")
-    void actualizarFecha(UUID id, LocalDateTime fecha);
+    @Query("""
+        UPDATE Conversacion c
+        SET c.fechaActualizacion = :fecha, c.metadata = :metadata
+        WHERE c.id = :id
+        """)
+    void actualizarMetadata(UUID id, LocalDateTime fecha, Map<String, Object> metadata);
 
     @Query("""
             SELECT count(m)

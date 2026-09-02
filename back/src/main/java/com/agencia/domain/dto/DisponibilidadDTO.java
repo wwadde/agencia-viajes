@@ -9,7 +9,6 @@ public record DisponibilidadDTO(
         LocalDate fechaSalida,
         BigDecimal precioPorPersona,
         Integer cuposDisponibles,
-        Integer personasSolicitadas,
         boolean disponible
 ) {
 }

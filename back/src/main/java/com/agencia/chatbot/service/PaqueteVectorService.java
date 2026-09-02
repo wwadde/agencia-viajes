@@ -24,7 +24,9 @@ public class PaqueteVectorService {
     private final VectorStore vectorStore;
     private final PaqueteRepository paqueteRepository;
 
-    private static final String TIPO_PAQUETE = "paquete";
+    public static final String TIPO_PAQUETE = "paquete";
+    public static final String PAQUETE_ID = "paqueteId";
+    public static final String PAQUETE_NOMBRE = "paqueteNombre";
 
     public boolean indexarPaquete(Long paqueteId, TipoEventoOutbox tipoEvento) {
 
@@ -76,7 +78,8 @@ public class PaqueteVectorService {
         return new Document(contenido,
                 Map.of(
                         "tipo", TIPO_PAQUETE,
-                        "paqueteId", paquete.getId().toString(),
+                        PAQUETE_ID, paquete.getId().toString(),
+                        PAQUETE_NOMBRE, paquete.getNombre(),
                         "destinoIds", paquete.getDestinos().stream().map(destino -> destino.getId().toString()).collect(Collectors.joining(",")),
                         "destinosNombres", paquete.getDestinos().stream().map(destino -> destino.getNombre()).collect(Collectors.joining(" -> ")),
                         "duracionDias", paquete.getDuracionDias().toString()

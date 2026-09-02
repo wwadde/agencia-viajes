@@ -2,14 +2,22 @@ package com.agencia.chatbot.utils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+
+import static com.agencia.chatbot.service.PaqueteVectorService.PAQUETE_ID;
+import static com.agencia.chatbot.service.PaqueteVectorService.PAQUETE_NOMBRE;
+
 
 @Component
 @RequiredArgsConstructor
@@ -17,56 +25,93 @@ import java.util.List;
 public class PaqueteRagTools {
 
     private final VectorStore vectorStore;
+    private final ChatClient.Builder chatClientBuilder;
 
-    @Tool(
-            name = "buscarPaquetesPorCaracteristicas",
-            description = """
-                    Busca paquetes mediante similitud semántica.
-
-                    Úsala cuando el usuario describa intereses, actividades,
-                    características o experiencias, por ejemplo: café, aventura,
-                    naturaleza o turismo cultural.
-
-                    No la uses para precios, fechas, cupos o disponibilidad.
-
-                    Devuelve paquetes relevantes con sus IDs. Si no encuentra
-                    resultados, no significa que el paquete no exista; considera
-                    otra búsqueda si la solicitud permite filtros estructurados.
-
-                    No inventes IDs ni información de paquetes.
-                    """
-    )
-    public List<PaqueteBusquedaRag> buscarPaquetesPorCaracteristicas(
-            @ToolParam(description = """
-                    Descripción semántica de lo que busca el usuario.
-                    Incluye los conceptos relevantes de su solicitud.
-
-                    Reformula mentalmente la intención del usuario como una consulta
-                    breve y descriptiva para buscar paquetes similares.
-                    """) String consulta
-    ) {
-
-        log.info("Buscando paquetes mediante RAG: consulta={}", consulta);
-
-        SearchRequest request = SearchRequest.builder()
-                .query(consulta)
-                .topK(3)
-                .similarityThreshold(0.4)
-                .build();
-
-
-        return vectorStore.similaritySearch(request)
-                .stream()
-                .map(document -> new PaqueteBusquedaRag(
-                        Long.valueOf(document.getMetadata().get("paqueteId").toString()),
-                        document.getMetadata().get("destinoId").toString(),
-                        document.getText(),
-                        document.getScore()
-                ))
-                .toList();
-    }
+//    @Tool(
+//            description = """
+//                    Identifica paquetes mediante similitud semántica.
+//
+//                    No inventes IDs ni información de paquetes.
+//
+//                    Retorna una lista de paquetes con su ID, nombre y ruta
+//                    """
+//    )
+//    public List<PaqueteBusquedaRag> buscarPaquetesPorCaracteristicas(
+//            @ToolParam(description = """
+//                    Descripción semántica de lo que busca el usuario.
+//                    Incluye los conceptos relevantes de su solicitud.
+//
+//                    Reformula mentalmente la intención del usuario como una consulta
+//                    breve y descriptiva para buscar paquetes similares.
+//                    """) String consulta
+//    ) {
+//
+//        log.info("Buscando paquetes mediante RAG: consulta={}", consulta);
+//
+//        SearchRequest request = SearchRequest.builder()
+//                .query(consulta)
+//                .topK(3)
+//                .similarityThreshold(0.4)
+//                .build();
+//
+//
+//        return vectorStore.similaritySearch(request)
+//                .stream()
+//                .map(document -> new PaqueteBusquedaRag(
+//                        Long.valueOf(document.getMetadata().get("paqueteId").toString()),
+//                        document.getMetadata().get("destinosNombres").toString(),
+//                        document.getText(),
+//                        document.getScore()
+//                ))
+//                .toList();
+//    }
 
     public record PaqueteBusquedaRag(Long paqueteId, String destino, String descripcion, Double puntuacion) {
+    }
+
+    @Tool(description = """
+            Busca paquetes mediante similitud semántica.
+
+            Úsala cuando el usuario describa intereses, actividades,
+            características o experiencias.
+
+            No la uses para precios, fechas, cupos o disponibilidad.
+            Retorna paquetes relevantes con sus paqueteId para que puedan ser utilizados
+            en herramientas posteriores si se necesita.""")
+    public String buscarPaquetes(String consulta, ToolContext toolContext) {
+        log.info("Buscando paquetes con RAG: {}", consulta);
+        ChatClientResponse response = chatClientBuilder.clone().build().prompt()
+                .advisors(RetrievalAugmentationAdvisor.builder()
+                        .documentRetriever(VectorStoreDocumentRetriever.builder()
+                                .vectorStore(vectorStore)
+                                .similarityThreshold(0.5)
+                                .topK(2)
+                                .build())
+                        .build())
+                .user(consulta)
+                .call()
+                .chatClientResponse();
+
+        @SuppressWarnings("unchecked")
+        List<Document> documentos = (List<Document>) response.context()
+                .getOrDefault(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT, List.of());
+
+        if (documentos == null || documentos.isEmpty()) {
+            log.warn("No se recuperaron documentos del RAG para la consulta: {}", consulta);
+        }
+
+        // TODO considerar agregar al toolContext un record, cambiando tambien el map de conversacion para tener tipado de los metadatos que se usan
+        Map<String, Object> contexto = ContextoConversacionTool.obtener(toolContext);
+        for (Document doc : documentos) {
+            Object paqueteId = doc.getMetadata().get(PAQUETE_ID);
+            Object paqueteNombre = doc.getMetadata().get(PAQUETE_NOMBRE);
+            if (paqueteId != null) {
+                contexto.put("paquete:" + paqueteId, doc.getMetadata());
+            }
+        }
+
+
+        return response.chatResponse().getResult().getOutput().getText();
     }
 
 

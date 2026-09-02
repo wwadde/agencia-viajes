@@ -55,7 +55,7 @@ public interface SalidaRepository extends JpaRepository<Salida, Long> {
     JOIN FETCH s.paquete p
     WHERE p.id = :paqueteId
       AND p.disponible = true
-      AND s.fechaSalida = :fechaSalida
+      AND s.fechaSalida <= :fechaSalida
     """)
     Optional<Salida> buscarSalida(@Param("paqueteId") Long paqueteId, @Param("fechaSalida") LocalDate fechaSalida);
 }

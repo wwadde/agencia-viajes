@@ -1,5 +1,6 @@
 package com.agencia.service;
 
+import com.agencia.config.mapper.ReservaMapper;
 import com.agencia.domain.Paquete;
 import com.agencia.domain.Reserva;
 import com.agencia.domain.ReservaEstado;
@@ -14,6 +15,8 @@ import com.agencia.repository.ReservaRepository;
 import com.agencia.repository.SalidaRepository;
 import com.agencia.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ public class ReservaService {
     private final ReservaRepository reservaRepository;
     private final SalidaRepository salidaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ReservaMapper destinoMapper;
 
     public List<ReservaDTO> listarMisReservas(Long usuarioId) {
         return reservaRepository.findByUsuarioIdOrderByFechaReservaDesc(usuarioId)
@@ -148,6 +152,14 @@ public class ReservaService {
     private Salida getSalidaForUpdateOrThrow(Long salidaId) {
         return salidaRepository.findByIdForUpdate(salidaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Salida no encontrada: " + salidaId));
+    }
+
+    public List<ReservaDTO> filtrarMax5Reservas(ReservaEstado estado, Long usuarioId) {
+        Pageable limit = PageRequest.of(0, 5);
+        return reservaRepository.filtrarReservasPorUsuario(estado, usuarioId, limit)
+                .stream()
+                .map(destinoMapper::toDTO)
+                .toList();
     }
 
     private ReservaDTO toDTO(Reserva reserva) {

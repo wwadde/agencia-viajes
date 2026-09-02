@@ -1,5 +1,6 @@
 package com.agencia.chatbot.service;
 
+import com.agencia.chatbot.utils.ContextoConversacionTool;
 import com.agencia.chatbot.utils.ConversacionMapper;
 import com.agencia.chatbot.dto.ChatRequest;
 import com.agencia.chatbot.dto.ConversacionDTO;
@@ -8,7 +9,7 @@ import com.agencia.chatbot.entity.RolMensaje;
 import com.agencia.chatbot.repository.ConversacionRepository;
 import com.agencia.chatbot.utils.ToolCallEvent;
 import com.agencia.chatbot.utils.ToolCallObservingAdvisor;
-import com.agencia.config.ChatMemoryManager;
+import com.agencia.chatbot.ChatMemoryManager;
 import com.agencia.domain.Usuario;
 import com.agencia.exception.ChatbotException;
 import com.agencia.exception.ConversacionException;
@@ -37,8 +38,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -57,6 +61,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     public static final int MAX_PREGUNTAS = 5;
 
 
+    // TODO volver a hacer los embeddings de los paquetes porque cambie el metadata
     @Override
     public SseEmitter chat(ChatRequest request, Usuario usuario) {
 
@@ -104,6 +109,19 @@ public class ChatbotServiceImpl implements ChatbotService {
                         e -> log.warn("Error en tool sink", e)
                 );
 
+        // Se siembra el contexto compartido con lo que ya estaba persistido en metadata.
+        // Este MISMO mapa es el que viaja en el toolContext y el que se vuelve a
+        // guardar al final del turno — sin transformaciones intermedias.
+        Map<String, Object> contextoConversacion = new ConcurrentHashMap<>();
+        if (conversacion.getMetadata() != null) {
+            contextoConversacion.putAll(conversacion.getMetadata());
+        }
+
+        Map<String, Object> toolContext = Map.of(
+                "conversationId", conversacion.getId().toString(),
+                ContextoConversacionTool.CLAVE, contextoConversacion
+        );
+
         StringBuilder respuestaCompleta = new StringBuilder();
         AtomicReference<Integer> inputTokens = new AtomicReference<>();
         AtomicReference<Integer> outputTokens = new AtomicReference<>();
@@ -115,6 +133,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .advisors(a -> a
                         .advisors(toolObserver)
                         .param(ChatMemory.CONVERSATION_ID, conversacion.getId().toString()))
+                .toolContext(toolContext)
                 .stream()
                 .chatResponse()
                 .doOnNext(chatResponse -> procesarChunk(chatResponse, respuestaCompleta, inputTokens, outputTokens, totalTokens, emitter))
@@ -127,6 +146,9 @@ public class ChatbotServiceImpl implements ChatbotService {
                 })
                 .doOnComplete(() -> {
                     if (!respuestaCompleta.isEmpty() && !errorSistema.get()) {
+
+                        conversacion.setMetadata(new HashMap<>(contextoConversacion));
+
                         guardarConversacionAsync(
                                 conversacion,
                                 request.peticion(),

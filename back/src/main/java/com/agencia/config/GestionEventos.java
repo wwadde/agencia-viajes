@@ -2,30 +2,26 @@ package com.agencia.config;
 
 import com.agencia.chatbot.service.PaqueteVectorService;
 import com.agencia.domain.EventoOutbox;
-import com.agencia.repository.EventoOutboxRepository;
 import com.agencia.service.EventoOutboxService;
 import com.agencia.utils.EstadoEventoOutbox;
 import com.agencia.utils.TipoEntidadOutbox;
-import com.agencia.utils.TipoEventoOutbox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class GestionEventos {
 
-    private final EventoOutboxRepository eventoOutboxRepository;
     private final PaqueteVectorService paqueteVectorService;
     private final EventoOutboxService eventoOutboxService;
 
     @Async
-    @EventListener(EventoOutboxService.EventoOutboxCreado.class)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void ejecutarEvento(EventoOutboxService.EventoOutboxCreado evento) {
 
         EventoOutbox outbox = evento.outbox();

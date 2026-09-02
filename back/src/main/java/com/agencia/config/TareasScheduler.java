@@ -1,5 +1,6 @@
 package com.agencia.config;
 
+import com.agencia.chatbot.ChatMemoryManager;
 import com.agencia.chatbot.service.PaqueteVectorService;
 import com.agencia.domain.EventoOutbox;
 import com.agencia.repository.EventoOutboxRepository;
@@ -13,7 +14,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

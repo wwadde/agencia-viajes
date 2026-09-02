@@ -5,6 +5,7 @@ CREATE TABLE conversaciones
     titulo              VARCHAR(255) NOT NULL,
     fecha_creacion      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     fecha_actualizacion TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    metadata            json,
 
     CONSTRAINT fk_conversaciones_usuario
         FOREIGN KEY (usuario_id)
@@ -26,10 +27,7 @@ CREATE TABLE mensajes_chat
     CONSTRAINT fk_mensajes_chat_conversacion
         FOREIGN KEY (conversacion_id)
             REFERENCES conversaciones (id)
-            ON DELETE CASCADE,
-
-    CONSTRAINT chk_mensajes_chat_rol
-        CHECK (rol_mensaje IN ('USUARIO', 'CHATBOT', 'SYSTEM'))
+            ON DELETE CASCADE
 );
 
 -- Conversaciones de un usuario

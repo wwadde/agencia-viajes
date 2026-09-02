@@ -1,4 +1,4 @@
-package com.agencia.config;
+package com.agencia.chatbot;
 
 import com.agencia.chatbot.entity.MensajeChat;
 import com.agencia.chatbot.entity.RolMensaje;
@@ -6,7 +6,6 @@ import com.agencia.chatbot.repository.MensajeChatRepository;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

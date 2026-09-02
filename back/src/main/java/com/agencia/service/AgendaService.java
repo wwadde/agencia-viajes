@@ -96,11 +96,7 @@ public class AgendaService {
         );
     }
 
-    public List<SalidaDTO> obtenerProximasSalidas(
-            Long paqueteId,
-            LocalDate desde,
-            Integer personas
-    ) {
+    public List<SalidaDTO> obtenerProximasSalidas(Long paqueteId, LocalDate desde, Integer personas) {
 
         if (desde == null) {
             desde = LocalDate.now();
@@ -126,19 +122,10 @@ public class AgendaService {
                 .toList();
     }
 
-    public DisponibilidadDTO verificarDisponibilidad(
-            Long paqueteId,
-            LocalDate fechaSalida,
-            Integer personas
-    ) {
+    public DisponibilidadDTO verificarDisponibilidad(Long paqueteId, LocalDate fechaSalida) {
 
-        if (personas == null || personas < 1) {
-            personas = 1;
-        }
 
-        Salida salida = salidaRepository
-                .buscarSalida(paqueteId, fechaSalida)
-                .orElse(null);
+        Salida salida = salidaRepository.buscarSalida(paqueteId, fechaSalida).orElse(null);
 
         if (salida == null) {
             return new DisponibilidadDTO(
@@ -147,13 +134,10 @@ public class AgendaService {
                     fechaSalida,
                     null,
                     0,
-                    personas,
                     false
             );
         }
 
-        boolean disponible =
-                salida.getCuposDisponibles() >= personas;
 
         return new DisponibilidadDTO(
                 paqueteId,
@@ -161,8 +145,7 @@ public class AgendaService {
                 salida.getFechaSalida(),
                 salida.getPrecio(),
                 salida.getCuposDisponibles(),
-                personas,
-                disponible
+                true
         );
     }
 

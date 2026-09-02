@@ -276,6 +276,24 @@ class PaqueteServiceTest {
     }
 
     @Test
+    void buscarRuta_debeDevolverLosDestinosEnOrdenDelPaquete() {
+        Destino destino1 = Destino.builder().id(1L).nombre("Cartagena").pais("Colombia").ciudad("Cartagena").build();
+        Destino destino2 = Destino.builder().id(2L).nombre("Medellin").pais("Colombia").ciudad("Medellín").build();
+        Paquete paquete = Paquete.builder()
+                .id(10L)
+                .destinos(List.of(destino1, destino2))
+                .build();
+
+        when(paqueteRepository.encontrarPaqueteConDestino(10L)).thenReturn(Optional.of(paquete));
+
+        var ruta = paqueteService.buscarRuta(10L);
+
+        assertEquals(2, ruta.size());
+        assertEquals("Cartagena", ruta.get(0).nombre());
+        assertEquals("Medellin", ruta.get(1).nombre());
+    }
+
+    @Test
     void obtenerPublico_debeLanzar404SiNoEstaDisponible() {
         Paquete oculto = Paquete.builder().id(99L).disponible(false).build();
         when(paqueteRepository.findDetalleBaseById(99L)).thenReturn(Optional.of(oculto));
