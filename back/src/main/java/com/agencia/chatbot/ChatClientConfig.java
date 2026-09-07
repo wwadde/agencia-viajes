@@ -7,6 +7,7 @@ import com.agencia.chatbot.utils.PaqueteRagTools;
 import com.agencia.chatbot.utils.PaqueteTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
@@ -70,8 +71,8 @@ public class ChatClientConfig {
 
         List<Advisor> advisors = new ArrayList<>();
         advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
-        loggerAdvisor.ifPresent(advisors::add);
-
+//        loggerAdvisor.ifPresent(advisors::add);
+        advisors.add(new SimpleLoggerAdvisor());
 
         return chatClientBuilder
                 .defaultSystem(SYSTEM_PROMPT)

@@ -2,6 +2,7 @@ package com.agencia.chatbot.repository;
 
 import com.agencia.chatbot.entity.Conversacion;
 import com.agencia.chatbot.entity.RolMensaje;
+import com.agencia.chatbot.entity.ToolHistorial;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +32,7 @@ public interface ConversacionRepository extends JpaRepository<Conversacion, UUID
         SET c.fechaActualizacion = :fecha, c.metadata = :metadata
         WHERE c.id = :id
         """)
-    void actualizarMetadata(UUID id, LocalDateTime fecha, Map<String, Object> metadata);
+    void actualizarMetadata(UUID id, LocalDateTime fecha, List<ToolHistorial> metadata);
 
     @Query("""
             SELECT count(m)

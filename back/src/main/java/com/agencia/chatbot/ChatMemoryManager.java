@@ -59,10 +59,8 @@ public class ChatMemoryManager {
     }
 
     public void limpiar() {
+        conversacionesActivas.keySet().forEach(chatMemory::clear);
         conversacionesActivas.clear();
     }
 
-    public Set<String> conversacionesActivas() {
-        return Set.copyOf(conversacionesActivas.keySet());
-    }
 }

@@ -1,14 +1,15 @@
 package com.agencia.chatbot.utils;
 
+import com.agencia.chatbot.service.ChatbotServiceImpl;
 import com.agencia.domain.ReservaEstado;
 import com.agencia.domain.Usuario;
 import com.agencia.domain.dto.ReservaDTO;
 import com.agencia.service.ReservaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,29 +26,12 @@ public class PagoTools {
     @Tool(description = "Consulta los pedidos/reservas del usuario")
     public List<ReservaDTO> misPedidos(
             @ToolParam(description = "Opcional: filtrar por estado", required = false)
-            ReservaEstado estado) {
+            ReservaEstado estado, ToolContext toolContext) {
 
-        Long usuarioId = extraerUsuarioId();
+        Long usuarioId = (Long) toolContext.getContext().get(ChatbotServiceImpl.USUARIO_ID_KEY);
         log.info("Consultando pedidos del usuario: {} con estado: {}", usuarioId, estado);
         return reservaService.filtrarMax5Reservas(estado, usuarioId);
 
     }
 
-
-    private Long extraerUsuarioId() {
-
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof Usuario usuario) {
-            return usuario.getId();
-        }
-
-        return null;
-    }
 }

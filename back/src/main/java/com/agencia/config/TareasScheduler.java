@@ -34,9 +34,6 @@ public class TareasScheduler {
     public void limpiarMemoriaChatbot() {
         log.info("Scheduler limpiando chatbot");
 
-        chatMemoryManager.conversacionesActivas()
-                .forEach(chatMemory::clear);
-
         chatMemoryManager.limpiar();
     }
 

@@ -1,8 +1,9 @@
 package com.agencia.chatbot.utils;
 
+import com.agencia.chatbot.entity.ToolHistorial;
 import org.springframework.ai.chat.model.ToolContext;
 
-import java.util.Map;
+import java.util.List;
 
 public final class ContextoConversacionTool {
 
@@ -12,9 +13,14 @@ public final class ContextoConversacionTool {
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<String, Object> obtener(ToolContext toolContext) {
-        if (toolContext == null) return Map.of();
+    public static List<ToolHistorial> historial(ToolContext toolContext) {
+        if (toolContext == null) {
+            return List.of();
+        }
         Object valor = toolContext.getContext().get(CLAVE);
-        return valor instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
+        if (valor instanceof List<?> lista) {
+            return (List<ToolHistorial>) lista;
+        }
+        return List.of();
     }
 }
