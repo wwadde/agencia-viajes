@@ -1,12 +1,19 @@
 package com.agencia.utils;
 
+import com.agencia.domain.Destino;
 import com.agencia.domain.Paquete;
 import com.agencia.domain.Salida;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public final class PaqueteSpecification {
 
@@ -14,101 +21,77 @@ public final class PaqueteSpecification {
     }
 
     public static Specification<Paquete> buscar(
-            String destino,
             String pais,
+            String ciudad,
             Integer duracionMaxima,
             BigDecimal presupuestoMaximo,
             LocalDate fechaSalida,
             Integer personas
     ) {
-        Specification<Paquete> specification = disponible();
-
-        if (destino != null && !destino.isBlank()) {
-            specification = specification.and(destinoContiene(destino));
-        }
-
-        if (pais != null && !pais.isBlank()) {
-            specification = specification.and(paisContiene(pais));
-        }
-
-        if (duracionMaxima != null) {
-            specification = specification.and(duracionMaxima(duracionMaxima));
-        }
-
-        if (presupuestoMaximo != null) {
-            specification = specification.and(precioMaximo(presupuestoMaximo));
-        }
-
-        if (fechaSalida != null) {
-            specification = specification.and(salidaDesde(fechaSalida));
-        }
-
-        if (personas != null) {
-            specification = specification.and(cuposMinimos(personas));
-        }
-
-        return specification;
+        return Specification.where(disponible())
+                .and(filtrarPorDestino(pais, ciudad))
+                .and(filtrarPorSalida(presupuestoMaximo, fechaSalida, personas))
+                .and(filtrarPorDuracion(duracionMaxima));
     }
 
     private static Specification<Paquete> disponible() {
-        return (root, query, cb) ->
-                cb.isTrue(root.get("disponible"));
+        return (root, query, cb) -> cb.isTrue(root.get("disponible"));
     }
 
-    private static Specification<Paquete> destinoContiene(String destino) {
+    private static Specification<Paquete> filtrarPorDuracion(Integer duracionMaxima) {
         return (root, query, cb) -> {
+            if (duracionMaxima == null) return cb.conjunction();
+            return cb.lessThanOrEqualTo(root.get("duracionDias"), duracionMaxima);
+        };
+    }
+
+    private static Specification<Paquete> filtrarPorDestino(String pais, String ciudad) {
+        return (root, query, cb) -> {
+            // Si no hay filtros de destino, no hacemos nada
+            if (StringUtils.isBlank(pais) && StringUtils.isBlank(ciudad)) {
+                return cb.conjunction();
+            }
+
             query.distinct(true);
-            Join<Paquete, com.agencia.domain.Destino> destinoJoin = root.join("destinos");
-            return cb.like(cb.lower(destinoJoin.get("nombre")), "%" + destino.toLowerCase() + "%");
+
+            Join<Paquete, Destino> destinoJoin = root.join("destinos", JoinType.INNER);
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (StringUtils.isNotBlank(pais)) {
+                predicates.add(cb.like(cb.lower(destinoJoin.get("pais")), "%" + pais.toLowerCase() + "%"));
+            }
+            if (StringUtils.isNotBlank(ciudad)) {
+                predicates.add(cb.like(cb.lower(destinoJoin.get("ciudad")), "%" + ciudad.toLowerCase() + "%"));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
-    private static Specification<Paquete> paisContiene(String pais) {
+    private static Specification<Paquete> filtrarPorSalida(BigDecimal precioMax, LocalDate fecha, Integer personas) {
         return (root, query, cb) -> {
+            if (precioMax == null && fecha == null && personas == null) {
+                return cb.conjunction();
+            }
+
             query.distinct(true);
-            Join<Paquete, com.agencia.domain.Destino> destinoJoin = root.join("destinos");
-            return cb.like(cb.lower(destinoJoin.get("pais")), "%" + pais.toLowerCase() + "%");
-        };
-    }
 
-    private static Specification<Paquete> duracionMaxima(Integer dias) {
-        return (root, query, cb) ->
-                cb.lessThanOrEqualTo(
-                        root.get("duracionDias"),
-                        dias
-                );
-    }
+            Join<Paquete, Salida> salidaJoin = root.join("salidas", JoinType.INNER);
 
-    private static Specification<Paquete> salidaDesde(LocalDate fecha) {
-        return (root, query, cb) -> {
-            Join<Paquete, Salida> salida = root.join("salidas");
+            List<Predicate> predicates = new ArrayList<>();
 
-            return cb.greaterThanOrEqualTo(
-                    salida.get("fechaSalida"),
-                    fecha
-            );
-        };
-    }
+            if (fecha != null) {
+                predicates.add(cb.greaterThanOrEqualTo(salidaJoin.get("fechaSalida"), fecha));
+            }
+            if (precioMax != null) {
+                predicates.add(cb.lessThanOrEqualTo(salidaJoin.get("precio"), precioMax));
+            }
+            if (personas != null) {
+                predicates.add(cb.greaterThanOrEqualTo(salidaJoin.get("cuposDisponibles"), personas));
+            }
 
-    private static Specification<Paquete> precioMaximo(BigDecimal precio) {
-        return (root, query, cb) -> {
-            Join<Paquete, Salida> salida = root.join("salidas");
-
-            return cb.lessThanOrEqualTo(
-                    salida.get("precio"),
-                    precio
-            );
-        };
-    }
-
-    private static Specification<Paquete> cuposMinimos(Integer personas) {
-        return (root, query, cb) -> {
-            Join<Paquete, Salida> salida = root.join("salidas");
-
-            return cb.greaterThanOrEqualTo(
-                    salida.get("cuposDisponibles"),
-                    personas
-            );
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }

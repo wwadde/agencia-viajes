@@ -1,8 +1,8 @@
 package com.agencia.chatbot.service;
 
-import com.agencia.chatbot.HistorialAdvisor;
 import com.agencia.chatbot.entity.ToolHistorial;
-import com.agencia.chatbot.utils.ContextoConversacionTool;
+import com.agencia.chatbot.config.advisors.HistorialAdvisor;
+import com.agencia.chatbot.utils.ContextoToolExtraccion;
 import com.agencia.chatbot.utils.ConversacionMapper;
 import com.agencia.chatbot.dto.ChatRequest;
 import com.agencia.chatbot.dto.ConversacionDTO;
@@ -10,8 +10,8 @@ import com.agencia.chatbot.entity.Conversacion;
 import com.agencia.chatbot.entity.RolMensaje;
 import com.agencia.chatbot.repository.ConversacionRepository;
 import com.agencia.chatbot.utils.ToolCallEvent;
-import com.agencia.chatbot.utils.ToolCallObservingAdvisor;
-import com.agencia.chatbot.ChatMemoryManager;
+import com.agencia.chatbot.config.advisors.ToolCallObservingAdvisor;
+import com.agencia.chatbot.utils.ChatMemoryManager;
 import com.agencia.domain.Usuario;
 import com.agencia.exception.ChatbotException;
 import com.agencia.exception.ConversacionException;
@@ -21,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -41,7 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -112,21 +111,22 @@ public class ChatbotServiceImpl implements ChatbotService {
         // Se siembra el contexto compartido con lo que ya estaba persistido en metadata.
         // Este MISMO mapa es el que viaja en el toolContext y el que se vuelve a
         // guardar al final del turno — sin transformaciones intermedias.
-        List<ToolHistorial> contextoConversacion = new CopyOnWriteArrayList<>();
+        Set<ToolHistorial> contextoConversacion = ConcurrentHashMap.newKeySet();
         if (conversacion.getMetadata() != null) {
             contextoConversacion.addAll(conversacion.getMetadata());
         }
 
         Map<String, Object> toolContext = Map.of(
                 USUARIO_ID_KEY, usuario.getId(),
-                ContextoConversacionTool.CLAVE, contextoConversacion
+                ContextoToolExtraccion.CLAVE, contextoConversacion
         );
 
         StringBuilder respuestaCompleta = new StringBuilder();
-        AtomicReference<Integer> inputTokens = new AtomicReference<>();
-        AtomicReference<Integer> outputTokens = new AtomicReference<>();
-        AtomicReference<Integer> totalTokens = new AtomicReference<>();
+        AtomicReference<Integer> inputTokens = new AtomicReference<>(0);
+        AtomicReference<Integer> outputTokens = new AtomicReference<>(0);
+        AtomicReference<Integer> totalTokens = new AtomicReference<>(0);
         AtomicBoolean errorSistema = new AtomicBoolean(false);
+        AtomicReference<ChatResponse> ultimoResponse = new AtomicReference<>();
 
         Disposable disposable = chatClient.prompt()
                 .user(request.peticion())
@@ -137,7 +137,10 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .toolContext(toolContext)
                 .stream()
                 .chatResponse()
-                .doOnNext(chatResponse -> procesarChunk(chatResponse, respuestaCompleta, inputTokens, outputTokens, totalTokens, emitter))
+                .doOnNext(chatResponse -> {
+                    ultimoResponse.set(chatResponse);
+                    procesarChunk(chatResponse, respuestaCompleta, emitter);
+                })
                 .doOnError(error -> {
                     errorSistema.set(true);
                     log.error("Error en el stream de conversación {}", conversacion.getId(), error);
@@ -146,9 +149,10 @@ public class ChatbotServiceImpl implements ChatbotService {
                     emitter.complete();
                 })
                 .doOnComplete(() -> {
+                    procesarUsoDeTokens(ultimoResponse.get(), inputTokens, outputTokens, totalTokens);
                     if (!respuestaCompleta.isEmpty() && !errorSistema.get()) {
 
-                        conversacion.setMetadata((List<ToolHistorial>) toolContext.get(ContextoConversacionTool.CLAVE));
+                        conversacion.setMetadata(contextoConversacion);
 
                         guardarConversacionAsync(
                                 conversacion,
@@ -237,8 +241,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         }
     }
 
-    private void procesarChunk(ChatResponse chatResponse, StringBuilder respuestaCompleta, AtomicReference<Integer> inputTokens,
-                               AtomicReference<Integer> outputTokens, AtomicReference<Integer> totalTokens, SseEmitter emitter) {
+    private void procesarChunk(ChatResponse chatResponse, StringBuilder respuestaCompleta, SseEmitter emitter) {
         if (chatResponse == null) return;
 
         String texto = Optional.ofNullable(chatResponse.getResult())
@@ -251,15 +254,19 @@ public class ChatbotServiceImpl implements ChatbotService {
             enviarEvento(emitter, "message", texto);
         }
 
-        Usage usage = Optional.ofNullable(chatResponse.getMetadata())
-                .map(ChatResponseMetadata::getUsage)
-                .orElse(null);
+    }
 
-        if (usage != null && usage.getTotalTokens() != null && usage.getTotalTokens() > 0) {
-            Optional.ofNullable(usage.getPromptTokens()).ifPresent(inputTokens::set);
-            Optional.ofNullable(usage.getCompletionTokens()).ifPresent(outputTokens::set);
-            totalTokens.set(usage.getTotalTokens());
-        }
+    private void procesarUsoDeTokens(ChatResponse chatResponse, AtomicReference<Integer> inputTokens,
+                                      AtomicReference<Integer> outputTokens, AtomicReference<Integer> totalTokens) {
+        if (chatResponse == null) return;
+
+        Usage usage = chatResponse.getMetadata().getUsage();
+
+        inputTokens.set(usage.getPromptTokens());
+        outputTokens.set(usage.getCompletionTokens());
+        totalTokens.set(usage.getTotalTokens());
+
+
     }
 
     private String resolverMensajeError(Throwable error) {

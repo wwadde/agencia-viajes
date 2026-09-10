@@ -1,5 +1,6 @@
 package com.agencia.chatbot.service;
 
+import com.agencia.domain.Destino;
 import com.agencia.domain.Paquete;
 import com.agencia.exception.ReglaNegocioException;
 import com.agencia.repository.PaqueteRepository;
@@ -39,6 +40,7 @@ public class PaqueteVectorService {
             eliminarDelVectorStore(paqueteId);
         }
 
+        // TODO: considerar si traer el paquete con salidas y agregarlos a la metadata
         Paquete paquete = paqueteRepository.encontrarPaqueteConDestino(paqueteId)
                 .orElseThrow(() -> new ReglaNegocioException("Paquete no encontrado con id: " + paqueteId));
 
@@ -81,7 +83,7 @@ public class PaqueteVectorService {
                         PAQUETE_ID, paquete.getId().toString(),
                         PAQUETE_NOMBRE, paquete.getNombre(),
                         "destinoIds", paquete.getDestinos().stream().map(destino -> destino.getId().toString()).collect(Collectors.joining(",")),
-                        "destinosNombres", paquete.getDestinos().stream().map(destino -> destino.getNombre()).collect(Collectors.joining(" -> ")),
+                        "destinosNombres", paquete.getDestinos().stream().map(Destino::getNombre).collect(Collectors.joining(" -> ")),
                         "duracionDias", paquete.getDuracionDias().toString()
                 )
         );
@@ -90,7 +92,7 @@ public class PaqueteVectorService {
     private void eliminarDelVectorStore(Long paqueteId) {
         Filter.Expression filterExpression = new Filter.Expression(
                 Filter.ExpressionType.EQ,
-                new Filter.Key("paqueteId"),
+                new Filter.Key(PAQUETE_ID),
                 new Filter.Value(paqueteId.toString())
         );
         vectorStore.delete(filterExpression);

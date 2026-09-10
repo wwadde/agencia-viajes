@@ -11,9 +11,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ConversacionRepository extends JpaRepository<Conversacion, UUID> {
@@ -32,7 +31,7 @@ public interface ConversacionRepository extends JpaRepository<Conversacion, UUID
         SET c.fechaActualizacion = :fecha, c.metadata = :metadata
         WHERE c.id = :id
         """)
-    void actualizarMetadata(UUID id, LocalDateTime fecha, List<ToolHistorial> metadata);
+    void actualizarMetadata(UUID id, LocalDateTime fecha, Set<ToolHistorial> metadata);
 
     @Query("""
             SELECT count(m)

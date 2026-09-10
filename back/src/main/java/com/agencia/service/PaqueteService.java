@@ -336,12 +336,12 @@ public class PaqueteService {
 
     @Transactional(readOnly = true)
     public List<PaqueteResumenDTO> buscarPaquetes(
-            String destino, String pais, Integer duracionMaxima,
+            String pais, String ciudad, Integer duracionMaxima,
             BigDecimal presupuestoMaximo, LocalDate fechaSalida, Integer personas
     ) {
 
         Specification<Paquete> specification =
-                PaqueteSpecification.buscar(destino, pais, duracionMaxima, presupuestoMaximo, fechaSalida, personas);
+                PaqueteSpecification.buscar(pais, ciudad, duracionMaxima, presupuestoMaximo, fechaSalida, personas);
 
         Pageable pageable = PageRequest.of(
                 0,

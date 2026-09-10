@@ -1,6 +1,6 @@
 package com.agencia.config;
 
-import com.agencia.chatbot.ChatMemoryManager;
+import com.agencia.chatbot.utils.ChatMemoryManager;
 import com.agencia.chatbot.service.PaqueteVectorService;
 import com.agencia.domain.EventoOutbox;
 import com.agencia.repository.EventoOutboxRepository;

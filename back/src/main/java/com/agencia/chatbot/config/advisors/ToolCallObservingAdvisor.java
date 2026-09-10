@@ -1,5 +1,6 @@
-package com.agencia.chatbot.utils;
+package com.agencia.chatbot.config.advisors;
 
+import com.agencia.chatbot.utils.ToolCallEvent;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;

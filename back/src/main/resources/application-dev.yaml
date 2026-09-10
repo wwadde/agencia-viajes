@@ -14,10 +14,11 @@ springdoc:
 logging:
   level:
 #    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
+#    org.hibernate.SQL: DEBUG
 #    com.zaxxer.hikari: DEBUG
     com.agencia: DEBUG
-    org.springframework.ai.chat.client.advisor: DEBUG
+    org.springframework.ai.chat.observation: DEBUG
+
 
 app:
   frontend:
@@ -70,7 +71,39 @@ spring:
     vectorstore:
       observations:
         log-query-response: true
+    chat:
+      observations:
+        log-prompt: true
+        log-completion: true
+      client:
+        observations:
+          log-prompt: true
   jpa:
     properties:
       hibernate:
         generate_statistics: true
+    show-sql: true
+
+
+
+payments:
+  enabled: false
+  provider: SIN_CONFIGURAR
+  webhook-secret: PAYMENTS_WEBHOOK_SECRET
+  callback-success-url: http://localhost:4200/pago/exito
+  callback-failure-url: http://localhost:4200/pago/error
+  currency-default: COP
+  payu:
+    sandbox-enabled: true
+    checkout-base-url: https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/
+    api-login: pRRXKOl8ikMmt9u
+    api-key: 4Vj8eK4rloUd272L48hsrarnUA
+    merchant-id: 508029
+    account-id: 512321
+    public-key: PKaC6H4cEDJD919n705L544kSU
+    response-url: http://localhost:4200/mis-reservas/resultado-pago
+    confirmation-url: http://localhost:8080/api/pagos/webhook/payu
+    sandbox-min-usd-amount: 1.00
+    sandbox-min-amount-by-currency:
+      USD: 1.00
+      COP: 4000.00

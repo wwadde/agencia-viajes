@@ -1,4 +1,4 @@
-package com.agencia.chatbot.utils;
+package com.agencia.chatbot.config.advisors;
 
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;

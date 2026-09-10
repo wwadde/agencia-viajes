@@ -52,7 +52,7 @@ dependencies {
 
 
 	compileOnly("org.projectlombok:lombok")
-	"developmentOnly"("org.springframework.boot:spring-boot-devtools")
+//	"developmentOnly"("org.springframework.boot:spring-boot-devtools")
 
 	runtimeOnly("org.postgresql:postgresql")
 
@@ -70,6 +70,9 @@ dependencies {
 	testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 	testImplementation("org.testcontainers:testcontainers-postgresql")
 
+//	testAndDevelopmentOnly("io.arconia:arconia-dev-services-lgtm")
+//	implementation("io.arconia:arconia-opentelemetry-spring-boot-starter")
+//	implementation("io.arconia:arconia-opentelemetry-ai-semantic-conventions")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -79,6 +82,7 @@ dependencyManagement {
 		mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
 		mavenBom("io.opentelemetry:opentelemetry-bom:1.62.0")
 		mavenBom("io.opentelemetry:opentelemetry-bom-alpha:1.62.0-alpha")
+//		mavenBom("io.arconia:arconia-bom:0.30.0")
 	}
 }
 

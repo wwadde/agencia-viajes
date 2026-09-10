@@ -1,4 +1,4 @@
-package com.agencia.chatbot;
+package com.agencia.chatbot.utils;
 
 import com.agencia.chatbot.entity.MensajeChat;
 import com.agencia.chatbot.entity.RolMensaje;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,7 +49,7 @@ public class ChatMemoryManager {
                 }
 
             });
-
+            // TODO: lo ideal seria que se registren tambien los ToolResponseMessage para agregar al historial de la conversacion. Por ahora algunos resultados de tools, los guardo como metadata en conversacion y aumento la query original con el contexto
         }
 
         // Registra siempre la conversacion activa

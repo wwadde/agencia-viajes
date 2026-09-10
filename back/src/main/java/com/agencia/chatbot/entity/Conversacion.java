@@ -8,7 +8,9 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -42,7 +44,6 @@ public class Conversacion {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
-    private List<ToolHistorial> metadata;
-
+    private Set<ToolHistorial> metadata = new HashSet<>();
 
 }
