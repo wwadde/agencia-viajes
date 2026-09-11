@@ -40,7 +40,6 @@ public class PaqueteVectorService {
             eliminarDelVectorStore(paqueteId);
         }
 
-        // TODO: considerar si traer el paquete con salidas y agregarlos a la metadata
         Paquete paquete = paqueteRepository.encontrarPaqueteConDestino(paqueteId)
                 .orElseThrow(() -> new ReglaNegocioException("Paquete no encontrado con id: " + paqueteId));
 
