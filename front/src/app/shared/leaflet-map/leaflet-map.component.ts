@@ -79,9 +79,12 @@ export class LeafletMapComponent implements OnDestroy {
   private async initializeMap() {
     if (this.map || this.destroyed) return;
 
-    const leafletModule = await import('leaflet');
+    const importedLeaflet = await import('leaflet');
     if (this.destroyed) return;
 
+    const leafletModule = (importedLeaflet as unknown as {
+      default?: typeof importedLeaflet;
+    }).default ?? importedLeaflet;
     this.leaflet = leafletModule;
     const initialLocations = this.locations().length > 0
       ? this.locations()
