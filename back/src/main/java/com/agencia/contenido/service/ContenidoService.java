@@ -1,10 +1,10 @@
-package com.agencia.service;
+package com.agencia.contenido.service;
 
-import com.agencia.domain.Contenido;
-import com.agencia.domain.dto.ContenidoDTO;
-import com.agencia.domain.dto.ContenidoUpsertDTO;
-import com.agencia.exception.RecursoNoEncontradoException;
-import com.agencia.repository.ContenidoRepository;
+import com.agencia.contenido.dto.ContenidoDTO;
+import com.agencia.contenido.dto.ContenidoUpsertDTO;
+import com.agencia.contenido.entity.Contenido;
+import com.agencia.contenido.repository.ContenidoRepository;
+import com.agencia.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

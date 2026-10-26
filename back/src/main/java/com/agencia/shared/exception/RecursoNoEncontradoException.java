@@ -1,4 +1,4 @@
-package com.agencia.exception;
+package com.agencia.shared.exception;
 
 public class RecursoNoEncontradoException extends RuntimeException {
 

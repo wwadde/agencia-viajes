@@ -1,8 +1,8 @@
-package com.agencia.service;
+package com.agencia.auth.service;
 
-import com.agencia.domain.Rol;
-import com.agencia.domain.Usuario;
-import com.agencia.repository.UsuarioRepository;
+import com.agencia.auth.entity.Rol;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.auth.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

@@ -1,8 +1,5 @@
-package com.agencia.domain;
+package com.agencia.outbox.entity;
 
-import com.agencia.utils.EstadoEventoOutbox;
-import com.agencia.utils.TipoEntidadOutbox;
-import com.agencia.utils.TipoEventoOutbox;
 import jakarta.persistence.*;
 import lombok.*;
 

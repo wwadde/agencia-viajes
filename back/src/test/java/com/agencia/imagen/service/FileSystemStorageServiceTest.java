@@ -1,7 +1,7 @@
-package com.agencia.service;
+package com.agencia.imagen.service;
 
-import com.agencia.config.StorageProperties;
-import com.agencia.exception.ArchivoInvalidoException;
+import com.agencia.imagen.config.StorageProperties;
+import com.agencia.imagen.exception.ArchivoInvalidoException;
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.webp.WebpWriter;
 import org.junit.jupiter.api.Test;

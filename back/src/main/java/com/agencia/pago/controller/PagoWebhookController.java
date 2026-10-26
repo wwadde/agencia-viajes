@@ -1,15 +1,12 @@
-package com.agencia.controller.publico;
+package com.agencia.pago.controller;
 
-import com.agencia.domain.dto.PagoWebhookDTO;
-import com.agencia.domain.dto.PayUWebhookRequestDTO;
-import com.agencia.domain.dto.WebhookAckDTO;
-import com.agencia.service.PagoService;
-import jakarta.validation.Valid;
+import com.agencia.pago.dto.PayUWebhookRequestDTO;
+import com.agencia.pago.dto.WebhookAckDTO;
+import com.agencia.pago.service.PagoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,12 +22,6 @@ public class PagoWebhookController {
 
     private final PagoService pagoService;
     private final ObjectMapper objectMapper;
-
-    @PostMapping("/webhook")
-    public ResponseEntity<WebhookAckDTO> webhook(@RequestBody @Valid PagoWebhookDTO dto) {
-        pagoService.procesarWebhook(dto);
-        return ResponseEntity.ok(new WebhookAckDTO("Webhook procesado"));
-    }
 
     @PostMapping(value = "/webhook/payu", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<WebhookAckDTO> webhookPayU(@RequestParam Map<String, String> formData) {

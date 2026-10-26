@@ -1,10 +1,10 @@
-package com.agencia.service;
+package com.agencia.outbox.service;
 
-import com.agencia.domain.EventoOutbox;
-import com.agencia.repository.EventoOutboxRepository;
-import com.agencia.utils.EstadoEventoOutbox;
-import com.agencia.utils.TipoEntidadOutbox;
-import com.agencia.utils.TipoEventoOutbox;
+import com.agencia.outbox.entity.EstadoEventoOutbox;
+import com.agencia.outbox.entity.EventoOutbox;
+import com.agencia.outbox.entity.TipoEntidadOutbox;
+import com.agencia.outbox.entity.TipoEventoOutbox;
+import com.agencia.outbox.repository.EventoOutboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;

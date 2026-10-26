@@ -1,4 +1,4 @@
-package com.agencia.config;
+package com.agencia.imagen.config;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;

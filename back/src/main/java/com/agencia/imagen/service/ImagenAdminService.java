@@ -1,7 +1,7 @@
-package com.agencia.service;
+package com.agencia.imagen.service;
 
-import com.agencia.domain.dto.ImagenBibliotecaItemDTO;
-import com.agencia.domain.dto.ImagenSubidaResponse;
+import com.agencia.imagen.dto.ImagenBibliotecaItemDTO;
+import com.agencia.imagen.dto.ImagenSubidaResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

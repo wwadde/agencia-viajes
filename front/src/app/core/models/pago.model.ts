@@ -6,11 +6,7 @@ export type PagoEstado =
     | 'CANCELADO'
     | 'EXPIRADO';
 
-export type ProveedorPago =
-    | 'SIN_CONFIGURAR'
-    | 'MERCADOPAGO'
-    | 'STRIPE'
-    | 'PAYU';
+export type ProveedorPago = 'PAYU';
 
 export interface PagoIntentoDTO {
     pagoId: number;

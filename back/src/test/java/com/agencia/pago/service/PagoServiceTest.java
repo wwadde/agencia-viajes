@@ -1,18 +1,17 @@
-package com.agencia.service;
+package com.agencia.pago.service;
 
-import com.agencia.config.PaymentProperties;
-import com.agencia.domain.Pago;
-import com.agencia.domain.PagoEstado;
-import com.agencia.domain.PagoProveedor;
-import com.agencia.domain.Reserva;
-import com.agencia.domain.ReservaEstado;
-import com.agencia.domain.dto.PagoCrearIntentoDTO;
-import com.agencia.domain.dto.PagoWebhookDTO;
-import com.agencia.domain.dto.PayUWebhookRequestDTO;
-import com.agencia.domain.dto.PasarelaCobroResponseDTO;
-import com.agencia.exception.ReglaNegocioException;
-import com.agencia.repository.PagoRepository;
-import com.agencia.repository.ReservaRepository;
+import com.agencia.pago.config.PaymentProperties;
+import com.agencia.pago.dto.PagoCrearIntentoDTO;
+import com.agencia.pago.dto.PasarelaCobroResponseDTO;
+import com.agencia.pago.dto.PayUWebhookRequestDTO;
+import com.agencia.pago.entity.Pago;
+import com.agencia.pago.entity.PagoEstado;
+import com.agencia.pago.entity.PagoProveedor;
+import com.agencia.pago.repository.PagoRepository;
+import com.agencia.reserva.entity.Reserva;
+import com.agencia.reserva.entity.ReservaEstado;
+import com.agencia.reserva.repository.ReservaRepository;
+import com.agencia.shared.exception.ReglaNegocioException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -42,10 +41,7 @@ class PagoServiceTest {
     private ReservaRepository reservaRepository;
 
     @Mock
-    private PasarelaPagoClientFactory pasarelaPagoClientFactory;
-
-    @Mock
-    private PasarelaPagoClient pasarelaPagoClient;
+    private PayUClient payUClient;
 
     @Mock
     private PaymentProperties paymentProperties;
@@ -64,8 +60,8 @@ class PagoServiceTest {
         when(reservaRepository.findByIdAndUsuarioId(100L, 7L)).thenReturn(Optional.of(reserva));
         when(pagoRepository.findTopByReservaIdOrderByCreadoEnDesc(100L)).thenReturn(Optional.empty());
         when(paymentProperties.currencyDefault()).thenReturn("COP");
-        when(pasarelaPagoClientFactory.getClient(PagoProveedor.STRIPE)).thenReturn(pasarelaPagoClient);
-        when(pasarelaPagoClient.crearCobro(any())).thenReturn(new PasarelaCobroResponseDTO(
+        when(paymentProperties.payu()).thenReturn(payuSinSandbox());
+        when(payUClient.crearCobro(any())).thenReturn(new PasarelaCobroResponseDTO(
                 "ref-123",
                 "https://checkout.local/ref-123",
                 "PENDING",
@@ -78,7 +74,7 @@ class PagoServiceTest {
             return pago;
         });
 
-        var result = pagoService.crearIntento(100L, 7L, PagoProveedor.STRIPE, new PagoCrearIntentoDTO(null, "idem-1"));
+        var result = pagoService.crearIntento(100L, 7L, new PagoCrearIntentoDTO(null, "idem-1"));
 
         assertEquals(1L, result.pagoId());
         assertEquals(PagoEstado.PENDIENTE, result.estado());
@@ -88,7 +84,7 @@ class PagoServiceTest {
         verify(pagoRepository).save(captor.capture());
         assertEquals(new BigDecimal("2500.00"), captor.getValue().getMonto());
         assertEquals("COP", captor.getValue().getMoneda());
-        assertEquals(PagoProveedor.STRIPE, captor.getValue().getProveedor());
+        assertEquals(PagoProveedor.PAYU, captor.getValue().getProveedor());
     }
 
     @Test
@@ -113,13 +109,13 @@ class PagoServiceTest {
         when(pagoRepository.findTopByReservaIdOrderByCreadoEnDesc(200L)).thenReturn(Optional.of(pagoActivo));
         when(pagoRepository.findByIdempotencyKeyAndReservaId(any(), any())).thenReturn(Optional.empty());
 
-        var result = pagoService.crearIntento(200L, 8L, PagoProveedor.PAYU, new PagoCrearIntentoDTO("COP", null));
+        var result = pagoService.crearIntento(200L, 8L, new PagoCrearIntentoDTO("COP", null));
 
         assertEquals(2L, result.pagoId());
         assertEquals("ref-activo", result.referenciaExterna());
         assertEquals(null, result.urlCheckout());
         assertEquals(null, result.checkoutPayload());
-        verify(pasarelaPagoClientFactory, never()).getClient(any());
+        verify(payUClient, never()).crearCobro(any());
     }
 
     @Test
@@ -137,8 +133,8 @@ class PagoServiceTest {
 
         when(reservaRepository.findByIdAndUsuarioId(201L, 8L)).thenReturn(Optional.of(reserva));
         when(pagoRepository.findTopByReservaIdOrderByCreadoEnDesc(201L)).thenReturn(Optional.of(pagoActivoVencido));
-        when(pasarelaPagoClientFactory.getClient(PagoProveedor.STRIPE)).thenReturn(pasarelaPagoClient);
-        when(pasarelaPagoClient.crearCobro(any())).thenReturn(new PasarelaCobroResponseDTO(
+        when(paymentProperties.payu()).thenReturn(payuSinSandbox());
+        when(payUClient.crearCobro(any())).thenReturn(new PasarelaCobroResponseDTO(
                 "ref-201",
                 "https://checkout.local/ref-201",
                 "PENDING",
@@ -153,7 +149,7 @@ class PagoServiceTest {
             return pago;
         });
 
-        var result = pagoService.crearIntento(201L, 8L, PagoProveedor.STRIPE, new PagoCrearIntentoDTO("COP", "idem-201"));
+        var result = pagoService.crearIntento(201L, 8L, new PagoCrearIntentoDTO("COP", "idem-201"));
 
         assertEquals(21L, result.pagoId());
         assertEquals(PagoEstado.EXPIRADO, pagoActivoVencido.getEstado());
@@ -182,37 +178,13 @@ class PagoServiceTest {
         when(reservaRepository.findByIdAndUsuarioId(202L, 9L)).thenReturn(Optional.of(reserva));
         when(pagoRepository.findByIdempotencyKeyAndReservaId("idem-202", 202L)).thenReturn(Optional.of(pagoExistente));
 
-        var result = pagoService.crearIntento(202L, 9L, PagoProveedor.PAYU, new PagoCrearIntentoDTO("COP", "idem-202"));
+        var result = pagoService.crearIntento(202L, 9L, new PagoCrearIntentoDTO("COP", "idem-202"));
 
         assertEquals(22L, result.pagoId());
         assertEquals("ref-existente", result.referenciaExterna());
         assertEquals(null, result.urlCheckout());
         assertEquals(null, result.checkoutPayload());
-        verify(pasarelaPagoClientFactory, never()).getClient(any());
-    }
-
-    @Test
-    void procesarWebhook_debeConfirmarReservaCuandoPagoAprueba() {
-        Reserva reserva = Reserva.builder()
-                .id(300L)
-                .estado(ReservaEstado.PENDIENTE)
-                .precioTotal(new BigDecimal("999.00"))
-                .build();
-        Pago pago = Pago.builder()
-                .id(3L)
-                .reserva(reserva)
-                .estado(PagoEstado.PENDIENTE)
-                .referenciaExterna("ref-ok")
-                .build();
-
-        when(pagoRepository.findByReferenciaExterna("ref-ok")).thenReturn(Optional.of(pago));
-
-        pagoService.procesarWebhook(new PagoWebhookDTO("ref-ok", "APPROVED", "firma-x", "{\"status\":\"APPROVED\"}"));
-
-        assertEquals(PagoEstado.APROBADO, pago.getEstado());
-        assertEquals(ReservaEstado.CONFIRMADA, reserva.getEstado());
-        verify(pagoRepository).save(pago);
-        verify(reservaRepository).save(reserva);
+        verify(payUClient, never()).crearCobro(any());
     }
 
     @Test
@@ -240,7 +212,7 @@ class PagoServiceTest {
         ));
 
         assertThrows(ReglaNegocioException.class,
-                () -> pagoService.crearIntento(410L, 22L, PagoProveedor.PAYU, new PagoCrearIntentoDTO("COP", "idem-payu")));
+                () -> pagoService.crearIntento(410L, 22L, new PagoCrearIntentoDTO("COP", "idem-payu")));
     }
 
     @Test
@@ -290,5 +262,21 @@ class PagoServiceTest {
         assertEquals(ReservaEstado.CONFIRMADA, reserva.getEstado());
         verify(pagoRepository).save(pago);
         verify(reservaRepository).save(reserva);
+    }
+
+    private PaymentProperties.PayU payuSinSandbox() {
+        return new PaymentProperties.PayU(
+                false,
+                "https://checkout.payulatam.com/ppp-web-gateway-payu/",
+                "login",
+                "key",
+                "merchant",
+                "account",
+                "public",
+                "http://localhost/ok",
+                "http://localhost/webhook",
+                new BigDecimal("1.00"),
+                Map.of()
+        );
     }
 }

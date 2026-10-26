@@ -1,6 +1,6 @@
-package com.agencia.domain.dto;
+package com.agencia.foro.dto;
 
-import com.agencia.domain.ForoBloqueTipo;
+import com.agencia.foro.entity.ForoBloqueTipo;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;

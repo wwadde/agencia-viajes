@@ -1,10 +1,10 @@
 package com.agencia.chatbot.controller;
 
 
+import com.agencia.auth.entity.Usuario;
 import com.agencia.chatbot.dto.ChatRequest;
 import com.agencia.chatbot.dto.ConversacionDTO;
 import com.agencia.chatbot.service.ChatbotService;
-import com.agencia.domain.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.memory.ChatMemory;

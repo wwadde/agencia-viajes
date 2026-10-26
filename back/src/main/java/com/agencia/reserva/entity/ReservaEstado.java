@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.reserva.entity;
 
 public enum ReservaEstado {
     PENDIENTE,

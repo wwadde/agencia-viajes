@@ -1,4 +1,4 @@
-package com.agencia.exception;
+package com.agencia.imagen.exception;
 
 /**
  * Excepción lanzada cuando ocurre un error de I/O durante las operaciones

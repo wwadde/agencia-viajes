@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.paquete.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,6 +9,7 @@ import tools.jackson.databind.JsonNode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.agencia.destino.entity.Destino;
 
 @Entity
 @NoArgsConstructor

@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.contenido.repository;
 
-import com.agencia.domain.Contenido;
+import com.agencia.contenido.entity.Contenido;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

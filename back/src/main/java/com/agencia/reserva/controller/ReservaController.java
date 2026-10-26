@@ -1,14 +1,13 @@
-package com.agencia.controller.publico;
+package com.agencia.reserva.controller;
 
-import com.agencia.domain.PagoProveedor;
-import com.agencia.domain.Usuario;
-import com.agencia.domain.dto.PagoCrearIntentoDTO;
-import com.agencia.domain.dto.PagoIntentoDTO;
-import com.agencia.domain.dto.PagoResumenDTO;
-import com.agencia.domain.dto.ReservaCrearDTO;
-import com.agencia.domain.dto.ReservaDTO;
-import com.agencia.service.PagoService;
-import com.agencia.service.ReservaService;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.pago.dto.PagoCrearIntentoDTO;
+import com.agencia.pago.dto.PagoIntentoDTO;
+import com.agencia.pago.dto.PagoResumenDTO;
+import com.agencia.pago.service.PagoService;
+import com.agencia.reserva.dto.ReservaCrearDTO;
+import com.agencia.reserva.dto.ReservaDTO;
+import com.agencia.reserva.service.ReservaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -73,10 +72,9 @@ public class ReservaController {
     @PostMapping("/{id}/pagos/intentos")
     public ResponseEntity<PagoIntentoDTO> crearIntentoPago(
             @PathVariable Long id,
-            @RequestParam(value = "proveedor", required = false) PagoProveedor proveedor,
             @RequestBody(required = false) @Valid PagoCrearIntentoDTO dto,
             @AuthenticationPrincipal Usuario usuario) {
         // TODO Frontend Angular: redirigir a urlCheckout (PayU WebCheckout), manejar retorno en responseUrl y refrescar estado con polling.
-        return ResponseEntity.ok(pagoService.crearIntento(id, usuario.getId(), proveedor, dto));
+        return ResponseEntity.ok(pagoService.crearIntento(id, usuario.getId(), dto));
     }
 }

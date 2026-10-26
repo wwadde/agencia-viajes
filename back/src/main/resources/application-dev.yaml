@@ -88,8 +88,6 @@ spring:
 
 payments:
   enabled: false
-  provider: SIN_CONFIGURAR
-  webhook-secret: PAYMENTS_WEBHOOK_SECRET
   callback-success-url: http://localhost:4200/pago/exito
   callback-failure-url: http://localhost:4200/pago/error
   currency-default: COP

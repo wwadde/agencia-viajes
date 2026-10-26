@@ -3,7 +3,7 @@ package com.agencia.chatbot.utils;
 
 import com.agencia.chatbot.entity.ToolHistorial;
 import com.agencia.chatbot.entity.ToolHistorialSalida;
-import com.agencia.domain.dto.SalidaDTO;
+import com.agencia.paquete.dto.SalidaDTO;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.document.Document;
 

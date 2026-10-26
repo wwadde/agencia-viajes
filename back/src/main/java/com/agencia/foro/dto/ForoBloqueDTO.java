@@ -1,6 +1,6 @@
-package com.agencia.domain.dto;
+package com.agencia.foro.dto;
 
-import com.agencia.domain.ForoBloqueTipo;
+import com.agencia.foro.entity.ForoBloqueTipo;
 
 public record ForoBloqueDTO(
         Long id,

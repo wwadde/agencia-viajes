@@ -1,9 +1,9 @@
-package com.agencia.controller.admin;
+package com.agencia.paquete.controller;
 
-import com.agencia.domain.dto.PaqueteDetalleDTO;
-import com.agencia.domain.dto.PaqueteResumenDTO;
-import com.agencia.domain.dto.PaqueteUpsertDTO;
-import com.agencia.service.PaqueteService;
+import com.agencia.paquete.dto.PaqueteDetalleDTO;
+import com.agencia.paquete.dto.PaqueteResumenDTO;
+import com.agencia.paquete.dto.PaqueteUpsertDTO;
+import com.agencia.paquete.service.PaqueteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

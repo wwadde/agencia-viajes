@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.foro.repository;
 
-import com.agencia.domain.ForoPostReaccion;
+import com.agencia.foro.entity.ForoPostReaccion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

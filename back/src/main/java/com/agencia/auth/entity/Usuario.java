@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

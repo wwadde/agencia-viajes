@@ -1,4 +1,4 @@
-package com.agencia.exception;
+package com.agencia.chatbot.exception;
 
 public class ChatbotException extends RuntimeException {
     public ChatbotException(String message) {

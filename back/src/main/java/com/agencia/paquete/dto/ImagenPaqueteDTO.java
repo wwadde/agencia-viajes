@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.paquete.dto;
 
 public record ImagenPaqueteDTO(
         Long id,

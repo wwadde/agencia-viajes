@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.contenido.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.foro.repository;
 
-import com.agencia.domain.ForoComentario;
+import com.agencia.foro.entity.ForoComentario;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.contenido.dto;
 
 public record ContenidoDTO(
         Long id,

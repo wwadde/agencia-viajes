@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.paquete.repository;
 
-import com.agencia.domain.Salida;
+import com.agencia.paquete.entity.Salida;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

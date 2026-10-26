@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.imagen.dto;
 
 import java.time.Instant;
 

@@ -1,4 +1,4 @@
-package com.agencia.config;
+package com.agencia.shared.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

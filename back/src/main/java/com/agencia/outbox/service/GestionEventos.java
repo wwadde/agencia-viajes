@@ -1,10 +1,9 @@
-package com.agencia.config;
+package com.agencia.outbox.service;
 
 import com.agencia.chatbot.service.PaqueteVectorService;
-import com.agencia.domain.EventoOutbox;
-import com.agencia.service.EventoOutboxService;
-import com.agencia.utils.EstadoEventoOutbox;
-import com.agencia.utils.TipoEntidadOutbox;
+import com.agencia.outbox.entity.EstadoEventoOutbox;
+import com.agencia.outbox.entity.EventoOutbox;
+import com.agencia.outbox.entity.TipoEntidadOutbox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

@@ -1,8 +1,9 @@
-package com.agencia.domain.dto;
+package com.agencia.paquete.dto;
 
 import tools.jackson.databind.JsonNode;
 
 import java.util.List;
+import com.agencia.destino.dto.DestinoDTO;
 
 public record PaqueteDetalleDTO(
         Long id,

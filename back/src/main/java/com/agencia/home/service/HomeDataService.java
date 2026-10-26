@@ -1,8 +1,10 @@
-package com.agencia.service;
+package com.agencia.home.service;
 
-import com.agencia.domain.dto.HomeDataDTO;
-import com.agencia.domain.dto.HomeLandingSlideDTO;
-import com.agencia.domain.dto.ImagenBibliotecaItemDTO;
+import com.agencia.home.dto.HomeDataDTO;
+import com.agencia.home.dto.HomeLandingSlideDTO;
+import com.agencia.imagen.dto.ImagenBibliotecaItemDTO;
+import com.agencia.imagen.service.ImagenAdminService;
+import com.agencia.paquete.service.PaqueteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

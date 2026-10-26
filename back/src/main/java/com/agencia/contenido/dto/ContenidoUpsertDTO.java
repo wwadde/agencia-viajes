@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.contenido.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

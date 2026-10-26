@@ -1,12 +1,11 @@
-package com.agencia.service;
+package com.agencia.pago.service;
 
-import com.agencia.config.PaymentProperties;
-import com.agencia.domain.PagoProveedor;
-import com.agencia.domain.dto.PayUCheckoutRequestDTO;
-import com.agencia.domain.dto.PayUCheckoutResponseDTO;
-import com.agencia.domain.dto.PasarelaCobroRequestDTO;
-import com.agencia.domain.dto.PasarelaCobroResponseDTO;
-import com.agencia.exception.ReglaNegocioException;
+import com.agencia.pago.config.PaymentProperties;
+import com.agencia.pago.dto.PasarelaCobroRequestDTO;
+import com.agencia.pago.dto.PasarelaCobroResponseDTO;
+import com.agencia.pago.dto.PayUCheckoutRequestDTO;
+import com.agencia.pago.dto.PayUCheckoutResponseDTO;
+import com.agencia.shared.exception.ReglaNegocioException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,19 +28,13 @@ import java.util.UUID;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class PayUClientStub implements PasarelaPagoClient {
+public class PayUClient {
 
     private static final String RESPONSE_URL_ID_PLACEHOLDER = "{id}";
 
     private final PaymentProperties paymentProperties;
     private final ObjectMapper objectMapper;
 
-    @Override
-    public PagoProveedor proveedor() {
-        return PagoProveedor.PAYU;
-    }
-
-    @Override
     public PasarelaCobroResponseDTO crearCobro(PasarelaCobroRequestDTO request) {
         PaymentProperties.PayU payu = paymentProperties.payu();
         validarConfiguracion(payu);

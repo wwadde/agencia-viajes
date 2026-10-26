@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.reserva.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

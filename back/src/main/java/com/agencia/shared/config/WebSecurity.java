@@ -1,12 +1,12 @@
-package com.agencia.config;
+package com.agencia.shared.config;
 
-import com.agencia.config.security.CustomAccessDeniedHandler;
-import com.agencia.config.security.CustomAuthenticationEntryPoint;
-import com.agencia.config.security.OAuth2LoginFailureHandler;
-import com.agencia.config.security.OAuth2LoginSuccessHandler;
-import com.agencia.service.GoogleOidcUserService;
-import com.agencia.service.GoogleOAuth2UserService;
-import com.agencia.service.MyUserDetailsService;
+import com.agencia.auth.service.GoogleOAuth2UserService;
+import com.agencia.auth.service.GoogleOidcUserService;
+import com.agencia.auth.service.MyUserDetailsService;
+import com.agencia.shared.config.security.CustomAccessDeniedHandler;
+import com.agencia.shared.config.security.CustomAuthenticationEntryPoint;
+import com.agencia.shared.config.security.OAuth2LoginFailureHandler;
+import com.agencia.shared.config.security.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +58,7 @@ public class WebSecurity {
                 .csrf(csrf -> csrf
                         // TODO probar estos endpoints y si vale la pena desactivar csrf
                         .ignoringRequestMatchers(
-                                "/api/pagos/webhook", "/api/pagos/webhook/payu"
+                                "/api/pagos/webhook/payu"
                         )
                         .spa()
                 )
@@ -75,7 +75,7 @@ public class WebSecurity {
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/pagos/webhook", "/api/pagos/webhook/payu").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pagos/webhook/payu").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/sitemap.xml").permitAll()
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/home/**").permitAll()

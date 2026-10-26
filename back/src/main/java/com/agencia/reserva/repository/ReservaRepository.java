@@ -1,7 +1,7 @@
-package com.agencia.repository;
+package com.agencia.reserva.repository;
 
-import com.agencia.domain.Reserva;
-import com.agencia.domain.ReservaEstado;
+import com.agencia.reserva.entity.Reserva;
+import com.agencia.reserva.entity.ReservaEstado;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

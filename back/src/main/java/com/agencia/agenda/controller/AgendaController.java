@@ -1,7 +1,7 @@
-package com.agencia.controller.publico;
+package com.agencia.agenda.controller;
 
-import com.agencia.domain.dto.AgendaSalidaDTO;
-import com.agencia.service.AgendaService;
+import com.agencia.agenda.dto.AgendaSalidaDTO;
+import com.agencia.agenda.service.AgendaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

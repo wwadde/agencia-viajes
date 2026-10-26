@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.foro.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

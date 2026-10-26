@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.auth.repository;
 
-import com.agencia.domain.Usuario;
+import com.agencia.auth.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

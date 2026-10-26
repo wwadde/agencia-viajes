@@ -1,7 +1,7 @@
-package com.agencia.config.security;
+package com.agencia.shared.config.security;
 
-import com.agencia.domain.Usuario;
-import com.agencia.service.GoogleUserProvisioningService;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.auth.service.GoogleUserProvisioningService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

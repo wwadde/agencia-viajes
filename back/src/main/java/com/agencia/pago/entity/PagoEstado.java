@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.pago.entity;
 
 public enum PagoEstado {
     PENDIENTE,

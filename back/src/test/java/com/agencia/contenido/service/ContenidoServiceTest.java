@@ -1,9 +1,9 @@
-package com.agencia.service;
+package com.agencia.contenido.service;
 
-import com.agencia.domain.Contenido;
-import com.agencia.domain.dto.ContenidoUpsertDTO;
-import com.agencia.exception.RecursoNoEncontradoException;
-import com.agencia.repository.ContenidoRepository;
+import com.agencia.contenido.dto.ContenidoUpsertDTO;
+import com.agencia.contenido.entity.Contenido;
+import com.agencia.contenido.repository.ContenidoRepository;
+import com.agencia.shared.exception.RecursoNoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

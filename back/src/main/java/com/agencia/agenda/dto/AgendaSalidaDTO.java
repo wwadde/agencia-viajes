@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.agenda.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

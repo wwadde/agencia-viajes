@@ -1,9 +1,12 @@
 package com.agencia.chatbot.utils.tools;
 
+import com.agencia.agenda.dto.DisponibilidadDTO;
+import com.agencia.agenda.service.AgendaService;
 import com.agencia.chatbot.utils.ContextoToolExtraccion;
-import com.agencia.domain.dto.*;
-import com.agencia.service.AgendaService;
-import com.agencia.service.PaqueteService;
+import com.agencia.destino.dto.DestinoDTO;
+import com.agencia.paquete.dto.PaqueteResumenDTO;
+import com.agencia.paquete.dto.SalidaDTO;
+import com.agencia.paquete.service.PaqueteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ToolContext;

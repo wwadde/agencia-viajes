@@ -1,10 +1,10 @@
-package com.agencia.controller.publico;
+package com.agencia.auth.controller;
 
-import com.agencia.domain.dto.LoginDTO;
-import com.agencia.domain.dto.RegistroUsuarioDTO;
-import com.agencia.domain.dto.UserInfoDTO;
-import com.agencia.domain.Usuario;
-import com.agencia.service.AuthService;
+import com.agencia.auth.dto.LoginDTO;
+import com.agencia.auth.dto.RegistroUsuarioDTO;
+import com.agencia.auth.dto.UserInfoDTO;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

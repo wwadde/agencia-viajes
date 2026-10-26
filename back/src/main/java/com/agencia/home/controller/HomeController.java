@@ -1,7 +1,7 @@
-package com.agencia.controller.publico;
+package com.agencia.home.controller;
 
-import com.agencia.domain.dto.HomeDataDTO;
-import com.agencia.service.HomeDataService;
+import com.agencia.home.dto.HomeDataDTO;
+import com.agencia.home.service.HomeDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,12 +1,13 @@
-package com.agencia.config.mapper;
+package com.agencia.paquete.mapper;
 
-import com.agencia.domain.ImagenPaquete;
-import com.agencia.domain.Paquete;
-import com.agencia.domain.Salida;
-import com.agencia.domain.dto.ImagenPaqueteDTO;
-import com.agencia.domain.dto.PaqueteDetalleDTO;
-import com.agencia.domain.dto.PaqueteResumenDTO;
-import com.agencia.domain.dto.SalidaDTO;
+import com.agencia.destino.mapper.DestinoMapper;
+import com.agencia.paquete.dto.ImagenPaqueteDTO;
+import com.agencia.paquete.dto.PaqueteDetalleDTO;
+import com.agencia.paquete.dto.PaqueteResumenDTO;
+import com.agencia.paquete.dto.SalidaDTO;
+import com.agencia.paquete.entity.ImagenPaquete;
+import com.agencia.paquete.entity.Paquete;
+import com.agencia.paquete.entity.Salida;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -34,7 +35,7 @@ public interface PaqueteMapper {
     SalidaDTO toSalidaDTO(Salida salida);
 
     @Named("destinoPrincipal")
-    default com.agencia.domain.Destino destinoPrincipal(Paquete paquete) {
+    default com.agencia.destino.entity.Destino destinoPrincipal(Paquete paquete) {
         return paquete == null || paquete.getDestinos() == null || paquete.getDestinos().isEmpty()
                 ? null : paquete.getDestinos().get(0);
     }

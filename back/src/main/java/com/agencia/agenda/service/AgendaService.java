@@ -1,14 +1,14 @@
-package com.agencia.service;
+package com.agencia.agenda.service;
 
-import com.agencia.domain.Paquete;
-import com.agencia.domain.Salida;
-import com.agencia.domain.dto.AgendaSalidaDTO;
-import com.agencia.domain.dto.AgendaSalidaUpsertDTO;
-import com.agencia.domain.dto.DisponibilidadDTO;
-import com.agencia.domain.dto.SalidaDTO;
-import com.agencia.exception.RecursoNoEncontradoException;
-import com.agencia.repository.PaqueteRepository;
-import com.agencia.repository.SalidaRepository;
+import com.agencia.agenda.dto.AgendaSalidaDTO;
+import com.agencia.agenda.dto.AgendaSalidaUpsertDTO;
+import com.agencia.agenda.dto.DisponibilidadDTO;
+import com.agencia.paquete.dto.SalidaDTO;
+import com.agencia.paquete.entity.Paquete;
+import com.agencia.paquete.entity.Salida;
+import com.agencia.paquete.repository.PaqueteRepository;
+import com.agencia.paquete.repository.SalidaRepository;
+import com.agencia.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

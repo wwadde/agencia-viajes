@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.foro.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import com.agencia.auth.entity.Usuario;
 
 @Entity
 @Table(name = "foro_post_reacciones")

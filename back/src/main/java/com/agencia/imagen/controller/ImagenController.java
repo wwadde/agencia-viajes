@@ -1,8 +1,8 @@
-package com.agencia.controller.publico;
+package com.agencia.imagen.controller;
 
-import com.agencia.domain.dto.ImagenBibliotecaItemDTO;
-import com.agencia.domain.dto.ImagenSubidaResponse;
-import com.agencia.service.ImagenAdminService;
+import com.agencia.imagen.dto.ImagenBibliotecaItemDTO;
+import com.agencia.imagen.dto.ImagenSubidaResponse;
+import com.agencia.imagen.service.ImagenAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.foro.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

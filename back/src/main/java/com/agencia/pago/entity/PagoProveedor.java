@@ -1,9 +1,6 @@
-package com.agencia.domain;
+package com.agencia.pago.entity;
 
 public enum PagoProveedor {
-    SIN_CONFIGURAR,
-    MERCADOPAGO,
-    STRIPE,
     PAYU
 }
 

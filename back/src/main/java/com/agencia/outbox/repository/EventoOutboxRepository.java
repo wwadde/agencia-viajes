@@ -1,8 +1,8 @@
-package com.agencia.repository;
+package com.agencia.outbox.repository;
 
-import com.agencia.domain.EventoOutbox;
-import com.agencia.utils.EstadoEventoOutbox;
-import com.agencia.utils.TipoEntidadOutbox;
+import com.agencia.outbox.entity.EstadoEventoOutbox;
+import com.agencia.outbox.entity.EventoOutbox;
+import com.agencia.outbox.entity.TipoEntidadOutbox;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

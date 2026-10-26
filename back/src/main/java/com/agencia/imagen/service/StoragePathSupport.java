@@ -1,7 +1,7 @@
-package com.agencia.service;
+package com.agencia.imagen.service;
 
-import com.agencia.exception.ArchivoInvalidoException;
-import com.agencia.exception.CarpetaInvalidaException;
+import com.agencia.imagen.exception.ArchivoInvalidoException;
+import com.agencia.imagen.exception.CarpetaInvalidaException;
 import org.springframework.util.StringUtils;
 
 import java.nio.file.Path;

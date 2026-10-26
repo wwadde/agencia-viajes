@@ -1,6 +1,6 @@
-package com.agencia.controller.publico;
+package com.agencia.sitemap.controller;
 
-import com.agencia.service.SitemapService;
+import com.agencia.sitemap.service.SitemapService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

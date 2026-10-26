@@ -1,22 +1,21 @@
-package com.agencia.service;
+package com.agencia.pago.service;
 
-import com.agencia.config.PaymentProperties;
-import com.agencia.domain.Pago;
-import com.agencia.domain.PagoEstado;
-import com.agencia.domain.PagoProveedor;
-import com.agencia.domain.Reserva;
-import com.agencia.domain.ReservaEstado;
-import com.agencia.domain.dto.PagoCrearIntentoDTO;
-import com.agencia.domain.dto.PagoIntentoDTO;
-import com.agencia.domain.dto.PagoResumenDTO;
-import com.agencia.domain.dto.PagoWebhookDTO;
-import com.agencia.domain.dto.PayUWebhookRequestDTO;
-import com.agencia.domain.dto.PasarelaCobroRequestDTO;
-import com.agencia.domain.dto.PasarelaCobroResponseDTO;
-import com.agencia.exception.RecursoNoEncontradoException;
-import com.agencia.exception.ReglaNegocioException;
-import com.agencia.repository.PagoRepository;
-import com.agencia.repository.ReservaRepository;
+import com.agencia.pago.config.PaymentProperties;
+import com.agencia.pago.dto.PagoCrearIntentoDTO;
+import com.agencia.pago.dto.PagoIntentoDTO;
+import com.agencia.pago.dto.PagoResumenDTO;
+import com.agencia.pago.dto.PasarelaCobroRequestDTO;
+import com.agencia.pago.dto.PasarelaCobroResponseDTO;
+import com.agencia.pago.dto.PayUWebhookRequestDTO;
+import com.agencia.pago.entity.Pago;
+import com.agencia.pago.entity.PagoEstado;
+import com.agencia.pago.entity.PagoProveedor;
+import com.agencia.pago.repository.PagoRepository;
+import com.agencia.reserva.entity.Reserva;
+import com.agencia.reserva.entity.ReservaEstado;
+import com.agencia.reserva.repository.ReservaRepository;
+import com.agencia.shared.exception.RecursoNoEncontradoException;
+import com.agencia.shared.exception.ReglaNegocioException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -42,11 +41,11 @@ public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final ReservaRepository reservaRepository;
-    private final PasarelaPagoClientFactory pasarelaPagoClientFactory;
+    private final PayUClient payUClient;
     private final PaymentProperties paymentProperties;
 
     @Transactional
-    public PagoIntentoDTO crearIntento(Long reservaId, Long usuarioId, PagoProveedor proveedor, PagoCrearIntentoDTO dto) {
+    public PagoIntentoDTO crearIntento(Long reservaId, Long usuarioId, PagoCrearIntentoDTO dto) {
         Reserva reserva = getReservaMiaOrThrow(reservaId, usuarioId);
 
         if (reserva.getEstado() == ReservaEstado.CANCELADA) {
@@ -64,13 +63,10 @@ public class PagoService {
             return toIntentoDTO(intentoActivoReutilizable, true);
         }
 
-        PagoProveedor proveedorSeleccionado = resolveProveedor(proveedor);
-        PasarelaPagoClient pasarelaClient = pasarelaPagoClientFactory.getClient(proveedorSeleccionado);
-
         String moneda = resolveMoneda(dto);
-        validarMontoSandboxPayU(proveedorSeleccionado, reserva.getPrecioTotal(), moneda);
+        validarMontoSandboxPayU(reserva.getPrecioTotal(), moneda);
 
-        PasarelaCobroResponseDTO response = pasarelaClient.crearCobro(
+        PasarelaCobroResponseDTO response = payUClient.crearCobro(
                 new PasarelaCobroRequestDTO(
                         reserva.getId(),
                         reserva.getPrecioTotal(),
@@ -83,7 +79,7 @@ public class PagoService {
         Pago pago = Pago.builder()
                 .reserva(reserva)
                 .estado(mapEstadoPasarela(response.estadoInicial()))
-                .proveedor(proveedorSeleccionado)
+                .proveedor(PagoProveedor.PAYU)
                 .monto(reserva.getPrecioTotal())
                 .moneda(moneda)
                 .referenciaExterna(response.referenciaExterna())
@@ -136,28 +132,6 @@ public class PagoService {
         return pagoRepository.findByReservaIdOrderByCreadoEnDesc(reservaId).stream()
                 .map(this::toResumenDTO)
                 .toList();
-    }
-
-    @Transactional
-    public void procesarWebhook(PagoWebhookDTO dto) {
-        // TODO Validar firma HMAC/JWS del proveedor con payments.webhook-secret antes de aceptar el webhook.
-        // TODO Validar replay attacks (timestamp + nonce) y usar idempotencia por evento del proveedor.
-
-        Pago pago = pagoRepository.findByReferenciaExterna(dto.referenciaExterna())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pago no encontrado para referencia: " + dto.referenciaExterna()));
-
-        PagoEstado nuevoEstado = mapEstadoPasarela(dto.estadoPasarela());
-
-        pago.setEstado(nuevoEstado);
-        pago.setPayloadPasarela(dto.payload());
-        pago.setActualizadoEn(LocalDateTime.now());
-
-        if (nuevoEstado == PagoEstado.APROBADO) {
-            pago.setConfirmadoEn(LocalDateTime.now());
-            confirmarReservaSiAplica(pago.getReserva());
-        }
-
-        pagoRepository.save(pago);
     }
 
     @Transactional
@@ -218,16 +192,6 @@ public class PagoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva no encontrada: " + reservaId));
     }
 
-    private PagoProveedor resolveProveedor(PagoProveedor proveedor) {
-        if (proveedor != null) {
-            return proveedor;
-        }
-        if (paymentProperties.provider() != null) {
-            return paymentProperties.provider();
-        }
-        return PagoProveedor.SIN_CONFIGURAR;
-    }
-
     private String resolveMoneda(PagoCrearIntentoDTO dto) {
         String moneda = dto != null ? dto.moneda() : null;
         if (moneda == null || moneda.isBlank()) {
@@ -244,8 +208,8 @@ public class PagoService {
         return UUID.randomUUID().toString();
     }
 
-    private void validarMontoSandboxPayU(PagoProveedor proveedor, BigDecimal monto, String moneda) {
-        if (proveedor != PagoProveedor.PAYU || !paymentProperties.payu().sandboxEnabled()) {
+    private void validarMontoSandboxPayU(BigDecimal monto, String moneda) {
+        if (!paymentProperties.payu().sandboxEnabled()) {
             return;
         }
 

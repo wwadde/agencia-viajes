@@ -1,10 +1,12 @@
-package com.agencia.domain;
+package com.agencia.reserva.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.paquete.entity.Salida;
 
 @Entity
 @Table(name = "reservas")

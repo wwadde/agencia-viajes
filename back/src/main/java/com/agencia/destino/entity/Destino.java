@@ -1,10 +1,11 @@
-package com.agencia.domain;
+package com.agencia.destino.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.agencia.paquete.entity.Paquete;
 
 @Entity
 @Table(name = "destinos")

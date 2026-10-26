@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.pago.dto;
 
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

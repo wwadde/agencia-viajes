@@ -1,9 +1,8 @@
-package com.agencia.service;
+package com.agencia.pago.service;
 
-import com.agencia.config.PaymentProperties;
-import com.agencia.domain.PagoProveedor;
-import com.agencia.domain.dto.PasarelaCobroRequestDTO;
-import com.agencia.exception.ReglaNegocioException;
+import com.agencia.pago.config.PaymentProperties;
+import com.agencia.pago.dto.PasarelaCobroRequestDTO;
+import com.agencia.shared.exception.ReglaNegocioException;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
@@ -14,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class PayUClientStubTest {
+class PayUClientTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -22,8 +21,6 @@ class PayUClientStubTest {
     void crearCobro_debeReemplazarPlaceholderIdEnResponseUrl() {
         PaymentProperties properties = new PaymentProperties(
                 true,
-                PagoProveedor.PAYU,
-                null,
                 "https://agencia.williamwadde.work/mis-reservas/resultado-pago",
                 null,
                 "COP",
@@ -42,7 +39,7 @@ class PayUClientStubTest {
                 )
         );
 
-        PayUClientStub client = new PayUClientStub(properties, objectMapper);
+        PayUClient client = new PayUClient(properties, objectMapper);
 
         var response = client.crearCobro(new PasarelaCobroRequestDTO(
                 9L,
@@ -67,8 +64,6 @@ class PayUClientStubTest {
     void crearCobro_conPlaceholderIdSinReservaId_debeFallar() {
         PaymentProperties properties = new PaymentProperties(
                 true,
-                PagoProveedor.PAYU,
-                null,
                 null,
                 null,
                 "COP",
@@ -87,7 +82,7 @@ class PayUClientStubTest {
                 )
         );
 
-        PayUClientStub client = new PayUClientStub(properties, objectMapper);
+        PayUClient client = new PayUClient(properties, objectMapper);
 
         PasarelaCobroRequestDTO request = new PasarelaCobroRequestDTO(
                 null,

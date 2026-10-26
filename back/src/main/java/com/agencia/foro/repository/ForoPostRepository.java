@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.foro.repository;
 
-import com.agencia.domain.ForoPost;
+import com.agencia.foro.entity.ForoPost;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

@@ -1,8 +1,8 @@
-package com.agencia.config.mapper;
+package com.agencia.auth.mapper;
 
-import com.agencia.domain.Usuario;
-import com.agencia.domain.dto.RegistroUsuarioDTO;
-import com.agencia.domain.dto.UserInfoDTO;
+import com.agencia.auth.dto.RegistroUsuarioDTO;
+import com.agencia.auth.dto.UserInfoDTO;
+import com.agencia.auth.entity.Usuario;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

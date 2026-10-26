@@ -1,10 +1,10 @@
 package com.agencia.chatbot.service;
 
 import com.agencia.chatbot.entity.Conversacion;
-import com.agencia.chatbot.repository.ConversacionRepository;
-import com.agencia.chatbot.repository.MensajeChatRepository;
 import com.agencia.chatbot.entity.MensajeChat;
 import com.agencia.chatbot.entity.RolMensaje;
+import com.agencia.chatbot.repository.ConversacionRepository;
+import com.agencia.chatbot.repository.MensajeChatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -113,8 +113,6 @@ storage:
 
 payments:
   enabled: ${PAYMENTS_ENABLED:false}
-  provider: ${PAYMENTS_PROVIDER:SIN_CONFIGURAR}
-  webhook-secret: ${PAYMENTS_WEBHOOK_SECRET:}
   callback-success-url: ${PAYMENTS_CALLBACK_SUCCESS_URL:http://localhost:4200/pago/exito}
   callback-failure-url: ${PAYMENTS_CALLBACK_FAILURE_URL:http://localhost:4200/pago/error}
   currency-default: ${PAYMENTS_CURRENCY_DEFAULT:COP}

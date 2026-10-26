@@ -1,8 +1,8 @@
-package com.agencia.controller.publico;
+package com.agencia.paquete.controller;
 
-import com.agencia.domain.dto.PaqueteDetalleDTO;
-import com.agencia.domain.dto.PaqueteResumenDTO;
-import com.agencia.service.PaqueteService;
+import com.agencia.paquete.dto.PaqueteDetalleDTO;
+import com.agencia.paquete.dto.PaqueteResumenDTO;
+import com.agencia.paquete.service.PaqueteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

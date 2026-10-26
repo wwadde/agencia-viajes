@@ -71,7 +71,7 @@ export default class CheckoutComponent implements OnInit {
     if (!id) return;
     
     // Obtener Intento desde el backend
-    const intento = await this.pagoService.crearIntento(id, 'PAYU');
+    const intento = await this.pagoService.crearIntento(id);
     
     if (intento && intento.checkoutPayload) {
       this.exitoLocal.set(true);

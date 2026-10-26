@@ -1,7 +1,7 @@
-package com.agencia.domain.dto;
+package com.agencia.pago.dto;
 
-import com.agencia.domain.PagoEstado;
-import com.agencia.domain.PagoProveedor;
+import com.agencia.pago.entity.PagoEstado;
+import com.agencia.pago.entity.PagoProveedor;
 
 import java.time.LocalDateTime;
 

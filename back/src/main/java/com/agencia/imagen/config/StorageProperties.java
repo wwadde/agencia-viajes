@@ -1,4 +1,4 @@
-package com.agencia.config;
+package com.agencia.imagen.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

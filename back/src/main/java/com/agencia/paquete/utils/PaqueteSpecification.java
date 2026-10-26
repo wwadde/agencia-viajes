@@ -1,8 +1,8 @@
-package com.agencia.utils;
+package com.agencia.paquete.utils;
 
-import com.agencia.domain.Destino;
-import com.agencia.domain.Paquete;
-import com.agencia.domain.Salida;
+import com.agencia.destino.entity.Destino;
+import com.agencia.paquete.entity.Paquete;
+import com.agencia.paquete.entity.Salida;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;

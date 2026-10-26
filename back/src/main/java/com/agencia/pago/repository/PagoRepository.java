@@ -1,7 +1,7 @@
-package com.agencia.repository;
+package com.agencia.pago.repository;
 
-import com.agencia.domain.Pago;
-import com.agencia.domain.PagoEstado;
+import com.agencia.pago.entity.Pago;
+import com.agencia.pago.entity.PagoEstado;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 

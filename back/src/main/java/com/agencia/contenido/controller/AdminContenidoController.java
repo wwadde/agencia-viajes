@@ -1,8 +1,8 @@
-package com.agencia.controller.admin;
+package com.agencia.contenido.controller;
 
-import com.agencia.domain.dto.ContenidoDTO;
-import com.agencia.domain.dto.ContenidoUpsertDTO;
-import com.agencia.service.ContenidoService;
+import com.agencia.contenido.dto.ContenidoDTO;
+import com.agencia.contenido.dto.ContenidoUpsertDTO;
+import com.agencia.contenido.service.ContenidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

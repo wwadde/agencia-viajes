@@ -1,7 +1,7 @@
-package com.agencia.config.mapper;
+package com.agencia.reserva.mapper;
 
-import com.agencia.domain.Reserva;
-import com.agencia.domain.dto.ReservaDTO;
+import com.agencia.reserva.dto.ReservaDTO;
+import com.agencia.reserva.entity.Reserva;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

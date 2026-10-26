@@ -1,8 +1,8 @@
-package com.agencia.service;
+package com.agencia.imagen.service;
 
-import com.agencia.exception.AlmacenamientoException;
-import com.agencia.exception.ArchivoInvalidoException;
-import com.agencia.exception.ArchivoNoEncontradoException;
+import com.agencia.imagen.exception.AlmacenamientoException;
+import com.agencia.imagen.exception.ArchivoInvalidoException;
+import com.agencia.imagen.exception.ArchivoNoEncontradoException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

@@ -1,11 +1,11 @@
-package com.agencia.controller.admin;
+package com.agencia.reserva.controller;
 
-import com.agencia.domain.ReservaEstado;
-import com.agencia.domain.dto.PagoResumenDTO;
-import com.agencia.domain.dto.ReservaDTO;
-import com.agencia.domain.dto.ReservaEstadoUpdateDTO;
-import com.agencia.service.PagoService;
-import com.agencia.service.ReservaService;
+import com.agencia.pago.dto.PagoResumenDTO;
+import com.agencia.pago.service.PagoService;
+import com.agencia.reserva.dto.ReservaDTO;
+import com.agencia.reserva.dto.ReservaEstadoUpdateDTO;
+import com.agencia.reserva.entity.ReservaEstado;
+import com.agencia.reserva.service.ReservaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

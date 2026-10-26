@@ -1,10 +1,10 @@
-package com.agencia.service;
+package com.agencia.destino.service;
 
-import com.agencia.config.mapper.DestinoMapper;
-import com.agencia.domain.Destino;
-import com.agencia.domain.dto.DestinoDTO;
-import com.agencia.exception.RecursoNoEncontradoException;
-import com.agencia.repository.DestinoRepository;
+import com.agencia.destino.dto.DestinoDTO;
+import com.agencia.destino.entity.Destino;
+import com.agencia.destino.mapper.DestinoMapper;
+import com.agencia.destino.repository.DestinoRepository;
+import com.agencia.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

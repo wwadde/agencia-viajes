@@ -1,7 +1,7 @@
 package com.agencia;
 
-import com.agencia.config.PaymentProperties;
-import com.agencia.config.StorageProperties;
+import com.agencia.imagen.config.StorageProperties;
+import com.agencia.pago.config.PaymentProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

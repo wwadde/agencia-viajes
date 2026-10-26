@@ -1,6 +1,5 @@
-package com.agencia.config;
+package com.agencia.pago.config;
 
-import com.agencia.domain.PagoProveedor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.math.BigDecimal;
@@ -11,17 +10,12 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "payments")
 public record PaymentProperties(
         boolean enabled,
-        PagoProveedor provider,
-        String webhookSecret,
         String callbackSuccessUrl,
         String callbackFailureUrl,
         String currencyDefault,
         PayU payu
 ) {
     public PaymentProperties {
-        if (provider == null) {
-            provider = PagoProveedor.SIN_CONFIGURAR;
-        }
         if (currencyDefault == null || currencyDefault.isBlank()) {
             currencyDefault = "COP";
         }

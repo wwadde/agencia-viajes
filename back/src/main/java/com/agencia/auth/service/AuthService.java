@@ -1,13 +1,13 @@
-package com.agencia.service;
+package com.agencia.auth.service;
 
-import com.agencia.config.mapper.UsuarioMapper;
-import com.agencia.domain.Rol;
-import com.agencia.domain.Usuario;
-import com.agencia.domain.dto.LoginDTO;
-import com.agencia.domain.dto.RegistroUsuarioDTO;
-import com.agencia.domain.dto.UserInfoDTO;
-import com.agencia.exception.UsuarioYaExisteException;
-import com.agencia.repository.UsuarioRepository;
+import com.agencia.auth.dto.LoginDTO;
+import com.agencia.auth.dto.RegistroUsuarioDTO;
+import com.agencia.auth.dto.UserInfoDTO;
+import com.agencia.auth.entity.Rol;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.auth.exception.UsuarioYaExisteException;
+import com.agencia.auth.mapper.UsuarioMapper;
+import com.agencia.auth.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

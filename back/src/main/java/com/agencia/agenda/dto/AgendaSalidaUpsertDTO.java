@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.agenda.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.FutureOrPresent;

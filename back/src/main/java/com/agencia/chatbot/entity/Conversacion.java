@@ -1,6 +1,6 @@
 package com.agencia.chatbot.entity;
 
-import com.agencia.domain.Usuario;
+import com.agencia.auth.entity.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;

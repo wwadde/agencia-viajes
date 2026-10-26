@@ -1,10 +1,10 @@
 package com.agencia.chatbot.utils.tools;
 
 import com.agencia.chatbot.service.ChatbotServiceImpl;
-import com.agencia.domain.ReservaEstado;
-import com.agencia.domain.dto.ReservaCrearDTO;
-import com.agencia.domain.dto.ReservaDTO;
-import com.agencia.service.ReservaService;
+import com.agencia.reserva.dto.ReservaCrearDTO;
+import com.agencia.reserva.dto.ReservaDTO;
+import com.agencia.reserva.entity.ReservaEstado;
+import com.agencia.reserva.service.ReservaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ToolContext;

@@ -1,11 +1,11 @@
 package com.agencia.chatbot.service;
 
-import com.agencia.domain.Destino;
-import com.agencia.domain.Paquete;
-import com.agencia.exception.ReglaNegocioException;
-import com.agencia.repository.PaqueteRepository;
+import com.agencia.destino.entity.Destino;
+import com.agencia.paquete.entity.Paquete;
+import com.agencia.paquete.repository.PaqueteRepository;
+import com.agencia.shared.exception.ReglaNegocioException;
 
-import com.agencia.utils.TipoEventoOutbox;
+import com.agencia.outbox.entity.TipoEventoOutbox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;

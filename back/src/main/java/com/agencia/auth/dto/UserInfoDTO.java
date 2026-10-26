@@ -1,6 +1,6 @@
-package com.agencia.domain.dto;
+package com.agencia.auth.dto;
 
-import com.agencia.domain.Rol;
+import com.agencia.auth.entity.Rol;
 
 /**
  * Información del usuario devuelta tras un login exitoso o al consultar /me.

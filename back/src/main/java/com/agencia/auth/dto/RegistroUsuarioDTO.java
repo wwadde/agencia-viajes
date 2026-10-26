@@ -1,6 +1,6 @@
-package com.agencia.domain.dto;
+package com.agencia.auth.dto;
 
-import com.agencia.utils.PasswordConstraint;
+import com.agencia.auth.utils.PasswordConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 

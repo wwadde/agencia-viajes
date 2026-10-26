@@ -1,7 +1,8 @@
-package com.agencia.repository;
+package com.agencia.paquete.repository;
 
-import com.agencia.domain.Destino;
-import com.agencia.domain.Paquete;
+import com.agencia.destino.entity.Destino;
+import com.agencia.destino.repository.DestinoRepository;
+import com.agencia.paquete.entity.Paquete;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

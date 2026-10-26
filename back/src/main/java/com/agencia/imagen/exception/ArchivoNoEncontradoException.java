@@ -1,4 +1,4 @@
-package com.agencia.exception;
+package com.agencia.imagen.exception;
 
 /**
  * Excepción lanzada cuando se solicita un archivo que no existe

@@ -1,4 +1,4 @@
-package com.agencia.config.security;
+package com.agencia.shared.config.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

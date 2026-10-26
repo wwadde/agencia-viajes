@@ -1,7 +1,7 @@
-package com.agencia.controller.publico;
+package com.agencia.destino.controller;
 
-import com.agencia.domain.dto.DestinoDTO;
-import com.agencia.service.DestinoService;
+import com.agencia.destino.dto.DestinoDTO;
+import com.agencia.destino.service.DestinoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

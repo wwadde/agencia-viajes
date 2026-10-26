@@ -1,7 +1,7 @@
-package com.agencia.controller.publico;
+package com.agencia.contenido.controller;
 
-import com.agencia.domain.dto.ContenidoDTO;
-import com.agencia.service.ContenidoService;
+import com.agencia.contenido.dto.ContenidoDTO;
+import com.agencia.contenido.service.ContenidoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

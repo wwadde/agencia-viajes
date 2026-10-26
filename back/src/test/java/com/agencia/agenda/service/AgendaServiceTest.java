@@ -1,10 +1,10 @@
-package com.agencia.service;
+package com.agencia.agenda.service;
 
-import com.agencia.domain.Paquete;
-import com.agencia.domain.Salida;
-import com.agencia.domain.dto.AgendaSalidaUpsertDTO;
-import com.agencia.repository.PaqueteRepository;
-import com.agencia.repository.SalidaRepository;
+import com.agencia.agenda.dto.AgendaSalidaUpsertDTO;
+import com.agencia.paquete.entity.Paquete;
+import com.agencia.paquete.entity.Salida;
+import com.agencia.paquete.repository.PaqueteRepository;
+import com.agencia.paquete.repository.SalidaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

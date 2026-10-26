@@ -1,4 +1,4 @@
-package com.agencia.utils;
+package com.agencia.outbox.entity;
 
 public enum EstadoEventoOutbox {
     PENDIENTE,

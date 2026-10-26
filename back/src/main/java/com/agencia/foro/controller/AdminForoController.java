@@ -1,11 +1,11 @@
-package com.agencia.controller.admin;
+package com.agencia.foro.controller;
 
-import com.agencia.domain.Usuario;
-import com.agencia.domain.dto.ForoComentarioModeracionDTO;
-import com.agencia.domain.dto.ForoPostDetalleDTO;
-import com.agencia.domain.dto.ForoPostResumenDTO;
-import com.agencia.domain.dto.ForoPostUpsertDTO;
-import com.agencia.service.ForoService;
+import com.agencia.auth.entity.Usuario;
+import com.agencia.foro.dto.ForoComentarioModeracionDTO;
+import com.agencia.foro.dto.ForoPostDetalleDTO;
+import com.agencia.foro.dto.ForoPostResumenDTO;
+import com.agencia.foro.dto.ForoPostUpsertDTO;
+import com.agencia.foro.service.ForoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

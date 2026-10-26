@@ -1,4 +1,4 @@
-package com.agencia.config;
+package com.agencia.shared.config;
 
 import io.opentelemetry.api.OpenTelemetry;
 

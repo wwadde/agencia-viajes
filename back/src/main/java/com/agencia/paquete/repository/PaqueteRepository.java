@@ -1,6 +1,6 @@
-package com.agencia.repository;
+package com.agencia.paquete.repository;
 
-import com.agencia.domain.Paquete;
+import com.agencia.paquete.entity.Paquete;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.home.dto;
 
 public record HomeLandingSlideDTO(
         String referencia,

@@ -1,7 +1,7 @@
-package com.agencia.config.mapper;
+package com.agencia.destino.mapper;
 
-import com.agencia.domain.Destino;
-import com.agencia.domain.dto.DestinoDTO;
+import com.agencia.destino.dto.DestinoDTO;
+import com.agencia.destino.entity.Destino;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

@@ -1,4 +1,4 @@
-package com.agencia.utils;
+package com.agencia.auth.utils;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

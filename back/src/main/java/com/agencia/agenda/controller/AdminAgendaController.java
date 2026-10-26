@@ -1,8 +1,8 @@
-package com.agencia.controller.admin;
+package com.agencia.agenda.controller;
 
-import com.agencia.domain.dto.AgendaSalidaDTO;
-import com.agencia.domain.dto.AgendaSalidaUpsertDTO;
-import com.agencia.service.AgendaService;
+import com.agencia.agenda.dto.AgendaSalidaDTO;
+import com.agencia.agenda.dto.AgendaSalidaUpsertDTO;
+import com.agencia.agenda.service.AgendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

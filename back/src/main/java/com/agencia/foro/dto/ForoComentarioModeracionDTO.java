@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.foro.dto;
 
 import jakarta.validation.constraints.NotNull;
 

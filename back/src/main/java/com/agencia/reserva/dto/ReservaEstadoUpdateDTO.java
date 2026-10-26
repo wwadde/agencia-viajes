@@ -1,6 +1,6 @@
-package com.agencia.domain.dto;
+package com.agencia.reserva.dto;
 
-import com.agencia.domain.ReservaEstado;
+import com.agencia.reserva.entity.ReservaEstado;
 import jakarta.validation.constraints.NotNull;
 
 public record ReservaEstadoUpdateDTO(

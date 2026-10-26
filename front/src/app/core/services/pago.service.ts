@@ -19,13 +19,13 @@ export class PagoService {
     readonly error = this._error.asReadonly();
 
     /**
-     * Crea un intento de pago con un proveedor específico para una reserva.
+     * Crea un intento de pago PayU para una reserva.
      */
-    async crearIntento(reservaId: number, proveedor: string = 'PAYU', metadata?: PagoCrearIntentoDTO): Promise<PagoIntentoDTO | null> {
+    async crearIntento(reservaId: number, metadata?: PagoCrearIntentoDTO): Promise<PagoIntentoDTO | null> {
         this._loading.set(true);
         this._error.set(null);
         try {
-            const url = `${this.baseUrl}/reservas/${reservaId}/pagos/intentos?proveedor=${proveedor}`;
+            const url = `${this.baseUrl}/reservas/${reservaId}/pagos/intentos`;
             return await firstValueFrom(
                 this.http.post<PagoIntentoDTO>(url, metadata || {})
             );

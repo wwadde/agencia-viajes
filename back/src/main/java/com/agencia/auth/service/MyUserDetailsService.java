@@ -1,6 +1,6 @@
-package com.agencia.service;
+package com.agencia.auth.service;
 
-import com.agencia.repository.UsuarioRepository;
+import com.agencia.auth.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

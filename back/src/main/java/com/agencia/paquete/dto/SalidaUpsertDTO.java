@@ -1,4 +1,4 @@
-package com.agencia.domain.dto;
+package com.agencia.paquete.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;

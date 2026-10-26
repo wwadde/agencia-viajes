@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.foro.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,6 +21,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.agencia.auth.entity.Usuario;
 
 @Entity
 @Table(name = "foro_posts")

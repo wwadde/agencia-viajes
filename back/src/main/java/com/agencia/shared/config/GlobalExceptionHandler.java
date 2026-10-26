@@ -1,6 +1,14 @@
-package com.agencia.config;
+package com.agencia.shared.config;
 
-import com.agencia.exception.*;
+import com.agencia.auth.exception.UsuarioYaExisteException;
+import com.agencia.chatbot.exception.ChatbotException;
+import com.agencia.chatbot.exception.ConversacionException;
+import com.agencia.imagen.exception.AlmacenamientoException;
+import com.agencia.imagen.exception.ArchivoInvalidoException;
+import com.agencia.imagen.exception.ArchivoNoEncontradoException;
+import com.agencia.imagen.exception.CarpetaInvalidaException;
+import com.agencia.shared.exception.RecursoNoEncontradoException;
+import com.agencia.shared.exception.ReglaNegocioException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

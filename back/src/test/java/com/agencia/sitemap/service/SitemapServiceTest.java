@@ -1,7 +1,7 @@
-package com.agencia.service;
+package com.agencia.sitemap.service;
 
-import com.agencia.repository.PaqueteRepository;
-import com.agencia.repository.ForoPostRepository;
+import com.agencia.foro.repository.ForoPostRepository;
+import com.agencia.paquete.repository.PaqueteRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -1,4 +1,4 @@
-package com.agencia.domain;
+package com.agencia.foro.entity;
 
 public enum ForoBloqueTipo {
     TEXTO,

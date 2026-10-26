@@ -1,6 +1,6 @@
-package com.agencia.service;
+package com.agencia.imagen.service;
 
-import com.agencia.exception.AlmacenamientoException;
+import com.agencia.imagen.exception.AlmacenamientoException;
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.ScaleMethod;
 import com.sksamuel.scrimage.webp.WebpWriter;
